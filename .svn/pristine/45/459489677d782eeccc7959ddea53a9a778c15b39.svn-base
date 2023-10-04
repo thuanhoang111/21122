@@ -1,0 +1,5 @@
+//function get name in listName with code from Api return
+export const handleGetTitleWithCode = (listNameArray, code) => {
+  const infoTitle = listNameArray.find((item) => item.code === code);
+  return infoTitle.title;
+};

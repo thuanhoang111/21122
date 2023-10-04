@@ -1,0 +1,100 @@
+[
+  [
+    { "AccountCode": "110", "AccountName": null, "Money": 1533406500 },
+    { "AccountCode": "120", "AccountName": null, "Money": 0 },
+    { "AccountCode": "130", "AccountName": null, "Money": 678552804.05 },
+    { "AccountCode": "137", "AccountName": null, "Money": 233952804.05 },
+    { "AccountCode": "140", "AccountName": null, "Money": 2814464229.92 },
+    { "AccountCode": "150", "AccountName": null, "Money": 3640193548.39 },
+    { "AccountCode": "160", "AccountName": null, "Money": 233359259.37 },
+    { "AccountCode": "170", "AccountName": null, "Money": 0 },
+    { "AccountCode": "200", "AccountName": null, "Money": 8899976341.73 },
+    { "AccountCode": "300", "AccountName": null, "Money": 2624645750 },
+    { "AccountCode": "310", "AccountName": null, "Money": 1026120000 },
+    { "AccountCode": "320", "AccountName": null, "Money": 38586500 },
+    { "AccountCode": "330", "AccountName": null, "Money": 145550000 },
+    { "AccountCode": "340", "AccountName": null, "Money": 0 },
+    { "AccountCode": "350", "AccountName": null, "Money": 422725000 },
+    { "AccountCode": "360", "AccountName": null, "Money": 110000000 },
+    { "AccountCode": "370", "AccountName": null, "Money": 0 },
+    { "AccountCode": "380", "AccountName": null, "Money": 0 },
+    { "AccountCode": "390", "AccountName": null, "Money": 4367627250 },
+    { "AccountCode": "400", "AccountName": null, "Money": 4107000000 },
+    { "AccountCode": "410", "AccountName": null, "Money": 286893536.29 },
+    { "AccountCode": "420", "AccountName": null, "Money": 120000000 },
+    { "AccountCode": "430", "AccountName": null, "Money": 0 },
+    { "AccountCode": "440", "AccountName": null, "Money": 4513893536.29 },
+    { "AccountCode": "500", "AccountName": null, "Money": 8881520786.29 }
+  ],
+  [
+    {
+      "<BkSerialNo>k__BackingField": "",
+      "<CheckExpired>k__BackingField": false,
+      "<ContractCode>k__BackingField": 0,
+      "<ParentId>k__BackingField": "",
+      "<UseEtax>k__BackingField": false,
+      "<ZeiNumber>k__BackingField": "",
+      "accountState": 0,
+      "account_type": 3,
+      "address1": "",
+      "address2": "",
+      "branch": { "branchCode": 5, "jaCode": 2, "year": 0 },
+      "builtinAccount": false,
+      "endtime": "2025-03-30T00:00:00",
+      "etaxUserId": "",
+      "force": true,
+      "hasBoki": false,
+      "hasShinkoku": false,
+      "id": "chinkt123",
+      "listAgriUniKCodeManage": null,
+      "listUniKCodeManage": null,
+      "loginTime": "2023-06-23T02:53:04.6146445Z",
+      "login_year": 2022,
+      "name": "chinkt123",
+      "note": "",
+      "only_manage_riyoshaId": null,
+      "passUpdateTime": "2023-06-22T02:11:35.727",
+      "passwdValidDay": 0,
+      "password": "Yu50/C/RUL8=",
+      "permission": [
+        { "branchCode": 5, "jaCode": 2, "year": 2020 },
+        { "branchCode": 5, "jaCode": 2, "year": 2021 },
+        { "branchCode": 5, "jaCode": 2, "year": 2022 }
+      ],
+      "policy": true,
+      "readOnly": 0,
+      "registtime": "2020-03-30T00:00:00",
+      "tel": "",
+      "type": 4,
+      "uni_k_code": 249,
+      "updateTime": "2023-03-28T04:41:09",
+      "useBokiValue": 1,
+      "useBunseki": false,
+      "useKachikuValue": 0,
+      "useNencho": false,
+      "useShinkokuValue": 0,
+      "useShiwake": false,
+      "zeiAddress1": "",
+      "zeiAddress2": "",
+      "zeiGroup": "",
+      "zeiNo": "",
+      "zeiSubGroup": "",
+      "zeiTel": "",
+      "zeiType": 0,
+      "zipCode": ""
+    }
+  ],
+  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 0}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 0}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 5304350}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 0}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 22000000}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 32494918}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 3044444.44}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 0}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 13500000}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 0}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 3044444.44}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 10000000}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 840000}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 0}, {"AccountCode": "0008", "AccountName": 
+ null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 13500000}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+  ,  [{"AccountCode": "0003", "AccountName": null, "Money": 0}, {"AccountCode": "0005", "AccountName": null, "Money": 0}, {"AccountCode": "0006", "AccountName": null, "Money": 0}, {"AccountCode": "0008", "AccountName": null, "Money": 0}, {"AccountCode": "0009", "AccountName": null, "Money": 0}, {"AccountCode": "0010", "AccountName": null, "Money": 0}]
+]

@@ -1,0 +1,29 @@
+{
+  "cSpell.words": [
+    "Actionsheet",
+    "Entypo",
+    "Ionicons",
+    "khẩu",
+    "Tien"
+  ],
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#5d4ce6",
+    "activityBar.background": "#5d4ce6",
+    "sash.hoverBorder": "#5d4ce6",
+    "titleBar.activeBackground": "#341fe0",
+    "titleBar.inactiveBackground": "#341fe099",
+    "activityBarBadge.background": "#eb8073",
+    "activityBarBadge.foreground": "#15202b",
+    "statusBar.background": "#341fe0",
+    "statusBarItem.hoverBackground": "#5d4ce6",
+    "statusBarItem.remoteBackground": "#341fe0",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "commandCenter.border": "#e7e7e799",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#341fe0"
+}
