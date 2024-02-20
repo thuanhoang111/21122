@@ -2,13 +2,15 @@ import { HStack, Pressable, Text, View } from "native-base";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { ScrollView } from "react-native";
 import { widthOfScreen } from "../../constants/ConstantMain";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AntDesign } from "@expo/vector-icons";
 function Pagination({ currentValue, lengthData, callBack, quantityItem }) {
   const maxPage = Math.ceil(lengthData / quantityItem);
+  // Initialize the array incrementally with the previously calculated number of maxPage
   const listNumber = Array.from({ length: maxPage }, (_, index) => index + 1);
   const [ref, setRef] = useState(null);
   const [dataSourceCords, setDataSourceCords] = useState([]);
+  // the function will be called then the value changes and scroll to the appropriate position
   const onChangeValue = () => {
     ref &&
       ref.scrollTo({
@@ -20,17 +22,20 @@ function Pagination({ currentValue, lengthData, callBack, quantityItem }) {
     onChangeValue();
   }, [currentValue]);
 
+  const handleChangePage = (numberPage) => {
+    callBack(numberPage);
+  };
   return (
     <HStack
       alignItems={"center"}
       justifyContent={"flex-end"}
       maxW={widthOfScreen * 0.61}
-      minW={widthOfScreen * 0.27}
-      width={widthOfScreen * (0.08 * maxPage + 0.24)}
+      minW={200}
     >
+      {/* Button choice first Page */}
       <Pressable
         Pressable
-        onPress={() => callBack(1)}
+        onPress={() => handleChangePage(1)}
         overflow="hidden"
         opacity={0.5}
         disabled={currentValue - 1 > 0 ? false : true}
@@ -50,9 +55,10 @@ function Pagination({ currentValue, lengthData, callBack, quantityItem }) {
           );
         }}
       </Pressable>
+      {/* Button choice previous Page */}
       <Pressable
         Pressable
-        onPress={() => callBack(currentValue - 1)}
+        onPress={() => handleChangePage(currentValue - 1)}
         overflow="hidden"
         opacity={0.5}
         disabled={currentValue - 1 > 0 ? false : true}
@@ -71,12 +77,17 @@ function Pagination({ currentValue, lengthData, callBack, quantityItem }) {
           );
         }}
       </Pressable>
-      <ScrollView horizontal ref={(ref) => setRef(ref)}>
+      {/* Button number pagez */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        ref={(ref) => setRef(ref)}
+      >
         {listNumber.map((item) => {
           return (
             <Pressable
-              onPress={() => callBack(item)}
-              overflow="hidden"
+              onPress={() => handleChangePage(item)}
+              overflow="visible"
               key={item}
               onLayout={(event) => {
                 const layout = event.nativeEvent.layout;
@@ -87,7 +98,8 @@ function Pagination({ currentValue, lengthData, callBack, quantityItem }) {
               {({ isHovered, isFocused, isPressed }) => {
                 return (
                   <View
-                    padding={2}
+                    paddingX={2}
+                    paddingY={1}
                     bg={
                       currentValue != item
                         ? isPressed
@@ -118,10 +130,10 @@ function Pagination({ currentValue, lengthData, callBack, quantityItem }) {
           );
         })}
       </ScrollView>
-
+      {/* Button choice next Page */}
       <Pressable
         Pressable
-        onPress={() => callBack(currentValue + 1)}
+        onPress={() => handleChangePage(currentValue + 1)}
         overflow="hidden"
         opacity={0.5}
         disabled={currentValue + 1 <= maxPage ? false : true}
@@ -140,9 +152,10 @@ function Pagination({ currentValue, lengthData, callBack, quantityItem }) {
           );
         }}
       </Pressable>
+      {/* Button choice last Page */}
       <Pressable
         Pressable
-        onPress={() => callBack(maxPage)}
+        onPress={() => handleChangePage(maxPage)}
         overflow="hidden"
         opacity={0.5}
         disabled={currentValue + 1 <= maxPage ? false : true}

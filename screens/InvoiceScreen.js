@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,31 +11,29 @@ import {
   FlatList,
   LogBox,
   Alert,
-  TouchableOpacity
-} from 'react-native'
-import { ItemRow } from './ItemGrid'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { StoreInfoUser } from '../constants/API'
+  TouchableOpacity,
+} from "react-native";
+import { ItemRow } from "./ItemGrid";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StoreInfoUser } from "../constants/API";
 import Dialog, {
   DialogContent,
   DialogFooter,
   DialogButton,
   DialogTitle,
   SlideAnimation,
-} from 'react-native-popup-dialog'
-import SiwakeAPI from '../API/SiwakeApi'
+} from "react-native-popup-dialog";
+import SiwakeAPI from "../API/SiwakeApi";
 import moment from "moment";
-import { useNavigation } from '@react-navigation/native';
-import { Invoice } from '../model/StructInvoice'
+import { useNavigation } from "@react-navigation/native";
+import { Invoice } from "../model/StructInvoice";
 
-
-LogBox.ignoreAllLogs(true)
-LogBox.ignoreLogs(['componentWillReceiveProps'])
+LogBox.ignoreAllLogs(true);
+LogBox.ignoreLogs(["componentWillReceiveProps"]);
 
 const InvoiceScreen = ({ route }) => {
-
   const navigation = route.params.navigation.navigation;
-  
+
   const siwakeRoute = route.params.data.Invoice.SiwakeModel;
   const productRoute = route.params.data.Invoice.ProductModel;
 
@@ -44,37 +42,36 @@ const InvoiceScreen = ({ route }) => {
     refresh: false,
     visibleDialog: false,
     idx: -1,
-  })
+  });
 
-  const [SiwakeModel, setdataSiwake] = useState(siwakeRoute)
-  const [ProductModel, setProductModel] = useState(productRoute)
+  const [SiwakeModel, setdataSiwake] = useState(siwakeRoute);
+  const [ProductModel, setProductModel] = useState(productRoute);
   // Biến tạm được sao chép từ ProductModel để edit
-  const [ProductTemp, setProductTemp] = useState([...ProductModel])
-
+  const [ProductTemp, setProductTemp] = useState([...ProductModel]);
 
   /**
     Xử lý đăng ký hàng hóa mới
   **/
   const registDataProduct = () => {
-    let temp_ProductModel = [...ProductTemp]
+    let temp_ProductModel = [...ProductTemp];
 
     temp_ProductModel.push({
       STT: temp_ProductModel.length + 1,
-      product_name: '',
-      unit: '',
-      quantity: '',
-      price: '',
-      total: '',
-    })
+      product_name: "",
+      unit: "",
+      quantity: "",
+      price: "",
+      total: "",
+    });
 
     let index = temp_ProductModel.length > 0 ? temp_ProductModel.length - 1 : 0;
-    setProductTemp(temp_ProductModel)
+    setProductTemp(temp_ProductModel);
     setStatus({
       ...status,
       visibleDialog: true,
       idx: index,
-    })
-  }
+    });
+  };
 
   /**
     Xử lý sửa hàng hóa
@@ -84,21 +81,21 @@ const InvoiceScreen = ({ route }) => {
       ...status,
       visibleDialog: val,
       idx: id,
-    })
-  }
+    });
+  };
 
   /**
     Xử lý cancel dialog
   **/
   const CancelUpdate = () => {
-    setProductTemp([...ProductModel])
+    setProductTemp([...ProductModel]);
 
     setStatus({
       ...status,
       visibleDialog: false,
       idx: -1,
-    })
-  }
+    });
+  };
 
   /**
      Khi thay đổi text của siwake
@@ -111,54 +108,60 @@ const InvoiceScreen = ({ route }) => {
         setdataSiwake({
           ...SiwakeModel,
           sohd: val,
-        })
+        });
         break;
       case 1:
         setdataSiwake({
           ...SiwakeModel,
           nguoimuahang: val,
-        })
+        });
         break;
       case 2:
         setdataSiwake({
           ...SiwakeModel,
           masothuebenmua: val,
-        })
+        });
         break;
       case 3:
-        
         setdataSiwake({
           ...SiwakeModel,
           ngayhoadon: val,
-        })
+        });
         break;
       case 4:
-        tienthanhtoan = parseFloat(val.replace(/,/g, '')) + parseFloat(SiwakeModel.congtienhang.replace(/,/g, ''))
+        tienthanhtoan =
+          parseFloat(val.replace(/,/g, "")) +
+          parseFloat(SiwakeModel.congtienhang.replace(/,/g, ""));
         setdataSiwake({
           ...SiwakeModel,
-          tienthueGTGT: NumberWithCommas(val.replace(/,/g, '').replace(/\./g, '')),
-          tongtienthanhtoan: NumberWithCommas(tienthanhtoan)
-        })
+          tienthueGTGT: NumberWithCommas(
+            val.replace(/,/g, "").replace(/\./g, "")
+          ),
+          tongtienthanhtoan: NumberWithCommas(tienthanhtoan),
+        });
         break;
       case 5:
-        tienthanhtoan = parseFloat(val.replace(/,/g, '')) + parseFloat(SiwakeModel.tienthueGTGT.replace(/,/g, ''))
+        tienthanhtoan =
+          parseFloat(val.replace(/,/g, "")) +
+          parseFloat(SiwakeModel.tienthueGTGT.replace(/,/g, ""));
         setdataSiwake({
           ...SiwakeModel,
-          congtienhang: NumberWithCommas(val.replace(/,/g, '').replace(/\./g, '')),
-          tongtienthanhtoan: NumberWithCommas(tienthanhtoan)
-        })
+          congtienhang: NumberWithCommas(
+            val.replace(/,/g, "").replace(/\./g, "")
+          ),
+          tongtienthanhtoan: NumberWithCommas(tienthanhtoan),
+        });
         break;
-      
     }
-  }
+  };
 
   /**
     Khi thay đổi text trong dialog
   **/
   const ChangeTextProduct = (index, val, mode) => {
     // Thao tác chỉnh sửa trên product tạm
-    let temp_ProductModel = [...ProductTemp]
-    let product = { ...temp_ProductModel[index] }
+    let temp_ProductModel = [...ProductTemp];
+    let product = { ...temp_ProductModel[index] };
 
     // Các mode chỉnh sửa
     switch (mode) {
@@ -173,112 +176,103 @@ const InvoiceScreen = ({ route }) => {
       // Số lượng
       case 3:
         product.quantity = val;
-        product.total = (val * product.price);
+        product.total = val * product.price;
         break;
       // Đơn giá
       case 4:
         product.price = val;
-        product.total = (val * product.quantity);
+        product.total = val * product.quantity;
         break;
     }
     temp_ProductModel[index] = product;
-    setProductTemp(temp_ProductModel)
-
-  }
+    setProductTemp(temp_ProductModel);
+  };
 
   /**
     Xử lý save dialog
   **/
   const HandleSaveDialog = () => {
-    let temp_ProductModel = [...ProductTemp]
-    let product = { ...temp_ProductModel[status.idx] }
-    ProductModel[status.idx] = product
-    setProductModel(ProductModel)
+    let temp_ProductModel = [...ProductTemp];
+    let product = { ...temp_ProductModel[status.idx] };
+    ProductModel[status.idx] = product;
+    setProductModel(ProductModel);
 
     setStatus({
       ...status,
       refresh: true,
       visibleDialog: false,
-    })
-  }
+    });
+  };
 
   /**
     Xử lý xóa hàng hóa
   **/
   const deleteProduct = (stt) => {
     let temp_ProductModel = [...ProductTemp];
-    debugger
-    var product = temp_ProductModel.find(p => p.STT == stt.toString())
+    debugger;
+    var product = temp_ProductModel.find((p) => p.STT == stt.toString());
     let i = temp_ProductModel.indexOf(product);
 
     if (temp_ProductModel[i]) {
       temp_ProductModel.splice(i, 1);
 
-      setProductTemp(
-        temp_ProductModel
-      )
-      setProductModel(
-        temp_ProductModel
-      )
+      setProductTemp(temp_ProductModel);
+      setProductModel(temp_ProductModel);
       setStatus({
         ...status,
         refresh: true,
-      })
+      });
     }
-  }
+  };
 
   /**
     Xử lý nút xác nhận để lưu chứng từ
   **/
   const HandleSubmit = async () => {
-    const infoUserGet = await AsyncStorage.getItem(StoreInfoUser)
-    let jsonUser = JSON.parse(infoUserGet)
+    const infoUserGet = await AsyncStorage.getItem(StoreInfoUser);
+    let jsonUser = JSON.parse(infoUserGet);
     // Mã uni_k_code
     let userID = jsonUser.id;
     let uni_k_code = jsonUser.uni_k_code;
 
     // Kiểm tra số hóa đơn
     if (SiwakeModel.sohd == "") {
-      Alert.alert('Thông báo', 'Không bỏ trống số hóa đơn', [
-        { text: 'Ok' },
-      ])
+      Alert.alert("Thông báo", "Không bỏ trống số hóa đơn", [{ text: "Ok" }]);
       return;
     }
     // Kiểm tra thông tin người mua hàng
     if (SiwakeModel.nguoimuahang == "") {
-      Alert.alert('Thông báo', 'Không bỏ trống người mua hàng', [
-        { text: 'Ok' },
-      ])
+      Alert.alert("Thông báo", "Không bỏ trống người mua hàng", [
+        { text: "Ok" },
+      ]);
       return;
     }
     // Kiểm tra mã số thuế
     if (SiwakeModel.masothuebenmua == "") {
-      Alert.alert('Thông báo', 'Không bỏ trống mã số thuế', [
-        { text: 'Ok' },
-      ])
+      Alert.alert("Thông báo", "Không bỏ trống mã số thuế", [{ text: "Ok" }]);
       return;
     }
     // Kiểm tra thuế VAT
     if (SiwakeModel.tienthueGTGT == "") {
-      Alert.alert('Thông báo', 'Không bỏ trống tiền thuế VAT', [
-        { text: 'Ok' },
-      ])
+      Alert.alert("Thông báo", "Không bỏ trống tiền thuế VAT", [
+        { text: "Ok" },
+      ]);
       return;
     }
     // Kiểm tra tiền thanh toán
     if (SiwakeModel.tongtienthanhtoan == "") {
-      Alert.alert('Thông báo', 'Không bỏ trống tiền thanh toán', [
-        { text: 'Ok' },
-      ])
+      Alert.alert("Thông báo", "Không bỏ trống tiền thanh toán", [
+        { text: "Ok" },
+      ]);
       return;
     }
     // Kiểm tra ngày
-    var dateInvoice = moment(SiwakeModel.ngayhoadon, "DD/MM/YYYY", true)
+    var dateInvoice = moment(SiwakeModel.ngayhoadon, "DD/MM/YYYY", true);
     if (!dateInvoice.isValid()) {
       Alert.alert(
         "Ngày mua",
         "Vui lòng kiểm tra ngày mua theo định dạng dd/MM/yyyy",
-        [{ text: "OK", onPress: () => { } }]
+        [{ text: "OK", onPress: () => {} }]
       );
       return;
     }
@@ -292,64 +286,93 @@ const InvoiceScreen = ({ route }) => {
       customer_name: SiwakeModel.nguoimuahang,
       customer_taxcode: SiwakeModel.masothuebenmua,
       purchase_date: ngayhoadon,
-      money_tax: NumberWithCommas(SiwakeModel.tienthueGTGT.replace(/,/g, '').replace(/\./g, '')),
-      money_total: NumberWithCommas(SiwakeModel.congtienhang.replace(/,/g, '').replace(/\./g, '')),
-      money_payment: NumberWithCommas(SiwakeModel.tongtienthanhtoan.replace(/,/g, '').replace(/\./g, '')),
-      no_hiden: SiwakeModel.no_hiden
-    }
+      money_tax: NumberWithCommas(
+        SiwakeModel.tienthueGTGT.replace(/,/g, "").replace(/\./g, "")
+      ),
+      money_total: NumberWithCommas(
+        SiwakeModel.congtienhang.replace(/,/g, "").replace(/\./g, "")
+      ),
+      money_payment: NumberWithCommas(
+        SiwakeModel.tongtienthanhtoan.replace(/,/g, "").replace(/\./g, "")
+      ),
+      no_hiden: SiwakeModel.no_hiden,
+    };
 
-    const result = await SiwakeUpdate(uni_k_code, userID, SiwakeMobile.no_hiden, SiwakeMobile, ProductModel, status.mode);
+    const result = await SiwakeUpdate(
+      uni_k_code,
+      userID,
+      SiwakeMobile.no_hiden,
+      SiwakeMobile,
+      ProductModel,
+      status.mode
+    );
 
-    result.error === null ?
-      Alert.alert(
-        "Thông báo",
-        "Cập nhật thành công",
-        [{ text: "OK", onPress: () => navigation.navigate("Danh sách hóa đơn", { load: false }) }]
-      ) :
-      Alert.alert(
-        "Lỗi",
-        "Cập nhật thất bại" + `${result.errorDescription}`,
-        [{ text: "OK", onPress: () => { } }]
-      );
-  }
+    result.error === null
+      ? Alert.alert("Thông báo", "Cập nhật thành công", [
+          {
+            text: "OK",
+            onPress: () =>
+              navigation.navigate("Danh sách hóa đơn", { load: false }),
+          },
+        ])
+      : Alert.alert("Lỗi", "Cập nhật thất bại" + `${result.errorDescription}`, [
+          { text: "OK", onPress: () => {} },
+        ]);
+  };
 
-  
-  const SiwakeUpdate = async (uni_k_code, userID, no, SiwakeMobile, ProductModel, mode) => {
+  const SiwakeUpdate = async (
+    uni_k_code,
+    userID,
+    no,
+    SiwakeMobile,
+    ProductModel,
+    mode
+  ) => {
     try {
       let siwakeResponse;
       // Thêm mới
       if (mode == "0") {
-        siwakeResponse = await SiwakeAPI.add(userID, SiwakeMobile, ProductModel);
+        siwakeResponse = await SiwakeAPI.add(
+          userID,
+          SiwakeMobile,
+          ProductModel
+        );
       }
       // chỉnh sửa
       else {
-        siwakeResponse = await SiwakeAPI.update(uni_k_code, userID, no, SiwakeMobile, ProductModel);
+        siwakeResponse = await SiwakeAPI.update(
+          uni_k_code,
+          userID,
+          no,
+          SiwakeMobile,
+          ProductModel
+        );
       }
 
       const result = JSON.parse(JSON.stringify(siwakeResponse));
       return result;
-    }
-    catch (err) {
-      console.log(err);
+    } catch (err) {
       alert("update failed");
     }
-
-  }
+  };
 
   const NumberWithCommas = (x) => {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  }
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
 
   // Render ra ItemRow trong FlatList
   const renderItem = (item) => (
-    <ItemRow itemRow={item} updateData={updateDataProduct} delete={deleteProduct} />
-  )
+    <ItemRow
+      itemRow={item}
+      updateData={updateDataProduct}
+      delete={deleteProduct}
+    />
+  );
 
   return (
     <SafeAreaView>
       <View style={{ height: 20 }}></View>
       <View>
-        
         {/*Begin of dialog*/}
         <Dialog
           visible={status.visibleDialog}
@@ -357,17 +380,18 @@ const InvoiceScreen = ({ route }) => {
             setStatus({
               ...status,
               visibleDialog: true,
-            })
+            });
           }}
           dialogTitle={
-            status.idx == -1 ?
+            status.idx == -1 ? (
               <DialogTitle title="Thêm thông tin hàng hóa" />
-              :
+            ) : (
               <DialogTitle title="Sửa thông tin hàng hóa" />
+            )
           }
           dialogAnimation={
             new SlideAnimation({
-              slideFrom: 'bottom',
+              slideFrom: "bottom",
             })
           }
           footer={
@@ -382,7 +406,7 @@ const InvoiceScreen = ({ route }) => {
             <View style={InvoiceScreen_Style.containRow}>
               <View style={{ flex: 2 }}>
                 <Text style={InvoiceScreen_Style.labelItem}>
-                  Tên hàng hóa:{' '}
+                  Tên hàng hóa:{" "}
                 </Text>
               </View>
               <View style={{ flex: 3 }}>
@@ -390,24 +414,26 @@ const InvoiceScreen = ({ route }) => {
                   style={InvoiceScreen_Style.input}
                   placeholder="Nhập tên mặt hàng"
                   defaultValue={
-                    status.idx >= 0 ? ProductTemp[status.idx].product_name : ''
+                    status.idx >= 0 ? ProductTemp[status.idx].product_name : ""
                   }
-                  onChangeText={(val) => { ChangeTextProduct(status.idx, val, 1) }}
+                  onChangeText={(val) => {
+                    ChangeTextProduct(status.idx, val, 1);
+                  }}
                   maxLength={20}
                 ></TextInput>
               </View>
             </View>
             <View style={InvoiceScreen_Style.containRow}>
               <View style={{ flex: 2 }}>
-                <Text style={InvoiceScreen_Style.labelItem}>
-                  Đơn vị tính:
-                </Text>
+                <Text style={InvoiceScreen_Style.labelItem}>Đơn vị tính:</Text>
               </View>
               <View style={{ flex: 3 }}>
                 <TextInput
                   style={InvoiceScreen_Style.input}
                   placeholder="Nhập đơn vị tính"
-                  defaultValue={status.idx >= 0 ? ProductTemp[status.idx].unit : ''}
+                  defaultValue={
+                    status.idx >= 0 ? ProductTemp[status.idx].unit : ""
+                  }
                   onChangeText={(val) => ChangeTextProduct(status.idx, val, 2)}
                   maxLength={10}
                 ></TextInput>
@@ -415,16 +441,16 @@ const InvoiceScreen = ({ route }) => {
             </View>
             <View style={InvoiceScreen_Style.containRow}>
               <View style={{ flex: 2 }}>
-                <Text style={InvoiceScreen_Style.labelItem}>
-                  Số lượng:
-                </Text>
+                <Text style={InvoiceScreen_Style.labelItem}>Số lượng:</Text>
               </View>
               <View style={{ flex: 3 }}>
                 <TextInput
                   style={InvoiceScreen_Style.input}
                   keyboardType="numeric"
                   placeholder="Nhập số lượng"
-                  defaultValue={status.idx >= 0 ? ProductTemp[status.idx].quantity : ''}
+                  defaultValue={
+                    status.idx >= 0 ? ProductTemp[status.idx].quantity : ""
+                  }
                   onChangeText={(val) => ChangeTextProduct(status.idx, val, 3)}
                   maxLength={10}
                 ></TextInput>
@@ -432,16 +458,16 @@ const InvoiceScreen = ({ route }) => {
             </View>
             <View style={InvoiceScreen_Style.containRow}>
               <View style={{ flex: 2 }}>
-                <Text style={InvoiceScreen_Style.labelItem}>
-                  Đơn giá:
-                </Text>
+                <Text style={InvoiceScreen_Style.labelItem}>Đơn giá:</Text>
               </View>
               <View style={{ flex: 3 }}>
                 <TextInput
                   style={InvoiceScreen_Style.input}
                   placeholder="Nhập đơn giá"
                   keyboardType="numeric"
-                  defaultValue={status.idx >= 0 ? ProductTemp[status.idx].price : ''}
+                  defaultValue={
+                    status.idx >= 0 ? ProductTemp[status.idx].price : ""
+                  }
                   onChangeText={(val) => ChangeTextProduct(status.idx, val, 4)}
                   maxLength={10}
                 ></TextInput>
@@ -449,15 +475,18 @@ const InvoiceScreen = ({ route }) => {
             </View>
             <View style={InvoiceScreen_Style.containRow}>
               <View style={{ flex: 1 }}>
-                <Text style={InvoiceScreen_Style.labelItem}>
-                  Thành tiền:
-                </Text>
+                <Text style={InvoiceScreen_Style.labelItem}>Thành tiền:</Text>
               </View>
               <View style={{ flex: 3 }}>
                 <Text style={InvoiceScreen_Style.labelItem}>
-                  {
-                    status.idx >= 0 ? NumberWithCommas(ProductTemp[status.idx].total.toString().replace(/,/g, '').replace(/\./g, '')) : ''
-                  }
+                  {status.idx >= 0
+                    ? NumberWithCommas(
+                        ProductTemp[status.idx].total
+                          .toString()
+                          .replace(/,/g, "")
+                          .replace(/\./g, "")
+                      )
+                    : ""}
                 </Text>
               </View>
             </View>
@@ -471,7 +500,7 @@ const InvoiceScreen = ({ route }) => {
               <View
                 style={[
                   InvoiceScreen_Style.containRow,
-                  { backgroundColor: 'White' },
+                  { backgroundColor: "White" },
                 ]}
               >
                 <View style={InvoiceScreen_Style.titleContainer}>
@@ -491,9 +520,7 @@ const InvoiceScreen = ({ route }) => {
 
               <View style={InvoiceScreen_Style.containRow}>
                 <View style={{ flex: 2 }}>
-                  <Text style={InvoiceScreen_Style.labelItem}>
-                    Số hóa đơn:
-                  </Text>
+                  <Text style={InvoiceScreen_Style.labelItem}>Số hóa đơn:</Text>
                 </View>
                 <View style={{ flex: 3 }}>
                   <TextInput
@@ -583,7 +610,9 @@ const InvoiceScreen = ({ route }) => {
 
               <View style={InvoiceScreen_Style.containRow}>
                 <View style={{ flex: 2 }}>
-                  <Text style={InvoiceScreen_Style.labelItem}>Tiền thanh toán:</Text>
+                  <Text style={InvoiceScreen_Style.labelItem}>
+                    Tiền thanh toán:
+                  </Text>
                 </View>
                 <View style={{ flex: 3 }}>
                   <TextInput
@@ -594,60 +623,56 @@ const InvoiceScreen = ({ route }) => {
                   ></TextInput>
                 </View>
               </View>
-
             </ScrollView>
           </View>
-          <View style={[InvoiceScreen_Style.headerContainer, { flex: 6 } ]}>
+          <View style={[InvoiceScreen_Style.headerContainer, { flex: 6 }]}>
             <View>
               <Text style={InvoiceScreen_Style.listViewHeader}>
                 Danh sách sản phẩm
               </Text>
             </View>
-            <View style={{alignItems:'flex-end', marginRight:20, color:'#fff'}}>
-              <TouchableOpacity onPress={()=>{registDataProduct()}} style={InvoiceScreen_Style.appButtonContainer}>
+            <View
+              style={{ alignItems: "flex-end", marginRight: 20, color: "#fff" }}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  registDataProduct();
+                }}
+                style={InvoiceScreen_Style.appButtonContainer}
+              >
                 <Text style={InvoiceScreen_Style.appButtonText}>+</Text>
               </TouchableOpacity>
             </View>
             <ScrollView>
-                <FlatList
-                  data={ProductModel}
-                  renderItem={({ item }) => renderItem(item)}
-                  keyExtractor={(item) => item.STT}
-                  extraData={status.refresh}
-                />
-              </ScrollView>
+              <FlatList
+                data={ProductModel}
+                renderItem={({ item }) => renderItem(item)}
+                keyExtractor={(item) => item.STT}
+                extraData={status.refresh}
+              />
+            </ScrollView>
           </View>
         </View>
       </View>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default InvoiceScreen
+export default InvoiceScreen;
 
-const width = Dimensions.get('window').width - 20
+const width = Dimensions.get("window").width - 20;
 export const InvoiceScreen_Style = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
   body: {
-    position: 'relative',
-    minHeight: Dimensions.get('window').height,
+    position: "relative",
+    minHeight: Dimensions.get("window").height,
   },
   title: {
-    fontWeight: 'bold',
-    color: '#41C8FF',
+    fontWeight: "bold",
+    color: "#41C8FF",
     fontSize: 20,
   },
   confirmButton: {
     width: (width * 25) / 100,
-  },
-  separator: {
-    marginVertical: '30',
-    height: '1',
-    width: '80%',
   },
   input: {
     flex: 1,
@@ -655,7 +680,7 @@ export const InvoiceScreen_Style = StyleSheet.create({
     borderWidth: 1,
     paddingLeft: 5,
     borderRadius: 5,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   input_money: {
     flex: 1,
@@ -663,72 +688,57 @@ export const InvoiceScreen_Style = StyleSheet.create({
     borderWidth: 1,
     paddingRight: 5,
     borderRadius: 5,
-    backgroundColor: 'white',
-    textAlign:'right'
+    backgroundColor: "white",
+    textAlign: "right",
   },
-
-  // duyen
-  lbText: {},
   listViewHeader: {
-    textAlign: 'center',
-    color: '#41C8FF',
-    fontWeight: 'bold',
+    textAlign: "center",
+    color: "#41C8FF",
+    fontWeight: "bold",
     fontSize: 20,
   },
-
-  input_child: {
-    flex: 1,
-    height: 35,
-    borderWidth: 1,
-    paddingLeft: 5,
-    marginTop: 5,
-    borderRadius: 5,
-    backgroundColor: 'white',
-    width: '100%',
-  },
-  priceLabel: {},
   // duyen
   titleContainer: {
     width: (width * 65) / 100,
-    alignItems: 'center',
+    alignItems: "center",
   },
   containRow: {
-    textAlignVertical: 'center',
+    textAlignVertical: "center",
     paddingTop: 5,
     paddingLeft: 10,
     paddingRight: 10,
     paddingBottom: 5,
-    backgroundColor: '#41C8FF',
+    backgroundColor: "#41C8FF",
     marginBottom: 4,
     borderRadius: 5,
-    flexDirection: 'row',
+    flexDirection: "row",
     width: width - 20,
     padding: 2,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   labelItem: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     fontSize: 15,
   },
   headerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    display: 'flex',
+    alignItems: "center",
+    justifyContent: "center",
+    display: "flex",
   },
   appButtonContainer: {
     elevation: 15,
     backgroundColor: "#41C8FF",
     borderRadius: 5,
-    paddingHorizontal:10
+    paddingHorizontal: 10,
   },
   appButtonText: {
     fontSize: 18,
     color: "#fff",
     fontWeight: "bold",
     alignSelf: "center",
-    textTransform: "uppercase"
-  }
-})
+    textTransform: "uppercase",
+  },
+});

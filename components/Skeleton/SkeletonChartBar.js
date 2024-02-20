@@ -2,26 +2,19 @@ import { Center, HStack, Skeleton } from "native-base";
 
 function SkeletonChartBar() {
   return (
-    <Center w="350">
-      <HStack
-        w="90%"
-        maxW="400"
-        overflow="scroll"
-        space={4}
-        borderColor={"#e3e3e4"}
-        borderLeftWidth="3"
-        borderBottomWidth="3"
-        height="80%"
-        alignItems={"flex-end"}
-        r
-      >
-        <Skeleton h="100%" w={10} marginLeft={5} borderTopRadius={10} />
-        <Skeleton h="80%" w={10} borderTopRadius={10} />
-        <Skeleton h="20%" w={10} borderTopRadius={10} />
-        <Skeleton h="50%" w={10} borderTopRadius={10} />
-        <Skeleton h="40%" w={10} borderTopRadius={10} />
-      </HStack>
-    </Center>
+    <HStack
+      w="100%"
+      paddingX={5}
+      space={2}
+      height="95%"
+      alignItems={"flex-end"}
+      borderBottomWidth={1}
+      borderBottomColor={"#d4d4d4"}
+    >
+      {Array.from({ length: 12 }, (_, index) => (
+        <Skeleton key={index} flex={1} height={`${Math.random() * 100}%`} />
+      ))}
+    </HStack>
   );
 }
 

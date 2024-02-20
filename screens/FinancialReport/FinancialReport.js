@@ -2,67 +2,81 @@ import { View } from "react-native";
 import * as constantMain from "../../constants/ConstantMain";
 import { VStack, Heading, ScrollView, Skeleton, Text } from "native-base";
 import * as Get from "../../API/service/Get";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import DataTableMain_2 from "./../../components/DataTable/DataTableMain_2";
-import { financialReportName } from "../../model/data";
-import { useToggle } from "@uidotdev/usehooks";
+import {
+  financialReportName24,
+  financialReportName133,
+} from "../../model/data";
 import SkeletonTable from "./../../components/Skeleton/SkeletonTable";
 import FinancialReportFilter from "./../../components/Filter/FinancialReportFilter";
 import Header from "../../components/Header/Header";
 import { Drawer } from "react-native-drawer-layout";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { MainContext } from "../MainContext";
+import { SafeAreaView } from "react-native";
+import { Alert } from "react-native";
+import { useObjectState } from "@uidotdev/usehooks";
 function FinancialReport({ route, navigation }) {
   const [open, setOpen] = useState(false);
-  const [listFinancialReport, setListFinancialReport] = useState();
-  const [isRender, setIsRender] = useToggle(false);
-  const dataUser = route.params.data;
-  const lastPermissionYear =
-    dataUser.permission[dataUser.permission.length - 1].year;
-  const [inforFilter, setInforFilter] = useState({
-    startMonth: 1,
-    endMonth: 12,
-    year: lastPermissionYear,
+  const [data, setData] = useObjectState({
+    listFinancialReport: undefined,
+    circulars: undefined,
   });
+  const mainContext = useContext(MainContext);
+  const dataUser = mainContext.dataUser;
+  const lastPermissionYear = mainContext.lastPermissionYear;
+  const onChangeLoading = mainContext.onChangeLoading;
+  const inforFilter = mainContext.inforFilter;
+  const isIos = mainContext.isIos;
   /**
    * Author:ThuanHoang 25/06/2023
    * Function handle get data Financial Report
    */
   const getInfoReport = async (year, startMonth, endMonth) => {
-    await Get.getWithParam(
+    await Get.HandleGetWithParam(
       "FinancialReport",
-      `m1=${startMonth}&m9=${endMonth}&userId=${dataUser.id}&year=${year}`
+      `m1=${startMonth}&m2=${endMonth}&userId=${dataUser.id}&year=${year}`
     )
-      .then((res) => {
-        setOpen(false);
-        setListFinancialReport(res[0].FinancialDetails);
-      })
-      .catch(() => {
-        setTimeout(() => {
-          setListFinancialReport([]);
-        }, 2000);
+      .then((data) => {
+        if (data.isError || data.error) {
+          Alert.alert(data.errorMsg || "Thông báo", data.errorDescription, [
+            { text: "Ok" },
+          ]);
+          setData(() => ({
+            listFinancialReport: [],
+            circulars: "Null",
+          }));
+        } else {
+          setData(() => ({
+            listFinancialReport: data[0].FinancialDetails,
+            circulars: data[0].ThongTu,
+          }));
+        }
       })
       .finally(() => {
-        setInforFilter({
-          startMonth,
-          endMonth,
-          year,
-        });
+        setTimeout(() => {
+          mainContext.onChangeLoading(false);
+          setOpen(false);
+          mainContext.onChangeInforFilter({
+            startMonth,
+            endMonth,
+            year,
+          });
+        }, 1000);
       });
   };
   useEffect(() => {
-    setTimeout(() => {
-      setIsRender(true);
-    }, 1);
+    onChangeLoading(false);
     getInfoReport(
-      inforFilter.year,
-      inforFilter.startMonth,
-      inforFilter.endMonth
+      inforFilter.year || lastPermissionYear,
+      inforFilter.startMonth || 1,
+      inforFilter.endMonth || 12
     );
   }, []);
   return (
     <Drawer
-      swipeEdgeWidth={40}
-      swipeMinDistance={100}
+      swipeEdgeWidth={constantMain.widthOfScreen * 0.5}
+      swipeMinDistance={50}
       swipeMinVelocity={1000}
       drawerPosition="right"
       drawerType="front"
@@ -70,12 +84,12 @@ function FinancialReport({ route, navigation }) {
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       hideStatusBarOnOpen
+      swipeEnabled={isIos}
       renderDrawerContent={() => {
         return (
           <FinancialReportFilter
             inforPermission={dataUser.permission}
             onSearch={getInfoReport}
-            inforFilter={inforFilter}
           />
         );
       }}
@@ -87,62 +101,86 @@ function FinancialReport({ route, navigation }) {
         onClick={() => setOpen(true)}
         isRightIcon
       ></Header>
-      <View
-        style={{
-          width: constantMain.widthOfScreen,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <VStack space={1} alignItems="center" marginY={2}>
-          {listFinancialReport ? (
-            <>
-              <Heading fontSize="xl">
-                {` Năm ${
-                  inforFilter
-                    ? inforFilter.year
-                    : dataUser.permission[dataUser.permission.length - 1].year
-                }`}
-              </Heading>
-              <Heading fontSize="md" fontWeight={400}>
-                Thông tư 24/2017/TT-BTC
-              </Heading>
-            </>
-          ) : (
-            isRender && (
+      <SafeAreaView>
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "94%",
+          }}
+        >
+          <VStack space={1} alignItems="center" marginY={2}>
+            {data.circulars ? (
+              data.circulars != "Null" ? (
+                <>
+                  <Heading fontSize="xl">
+                    {` Năm ${
+                      inforFilter.year
+                        ? inforFilter.year
+                        : dataUser.permission[dataUser.permission.length - 1]
+                            .year
+                    }`}
+                  </Heading>
+                  <Heading fontSize="md" fontWeight={400}>
+                    Thông tư {data.circulars}/
+                    {inforFilter.year || lastPermissionYear}/TT-BTC
+                  </Heading>
+                </>
+              ) : (
+                <Heading fontSize="xl" fontWeight={400}>
+                  Không có dữ liệu
+                </Heading>
+              )
+            ) : (
               <>
                 <Skeleton.Text lines={1} w={"35%"}></Skeleton.Text>
                 <Skeleton.Text lines={1} w={"70%"}></Skeleton.Text>
               </>
-            )
-          )}
-        </VStack>
+            )}
+          </VStack>
 
-        {listFinancialReport ? (
-          <ScrollView
-            height={constantMain.heightOfScreen * 0.72}
-            nestedScrollEnabled={true}
-          >
-            <DataTableMain_2
-              fields={["Tài Sản"]}
-              data={listFinancialReport.slice(0, 9)}
-              listTitle={financialReportName.slice(0, 9)}
-            ></DataTableMain_2>
-            <DataTableMain_2
-              fields={["Nguồn vốn"]}
-              data={listFinancialReport.slice(9)}
-              listTitle={financialReportName.slice(9)}
-            ></DataTableMain_2>
-          </ScrollView>
-        ) : (
-          <ScrollView>
-            <VStack space={5} alignItems={"center"}>
-              <SkeletonTable length={6} numberInLine={1} />
-              <SkeletonTable length={5} numberInLine={1} />
-            </VStack>
-          </ScrollView>
-        )}
-      </View>
+          {data.listFinancialReport ? (
+            <ScrollView
+              flex={1}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+            >
+              <DataTableMain_2
+                fields={["Tài Sản"]}
+                data={data.listFinancialReport.slice(
+                  0,
+                  data.circulars === "TT133" ? 27 : 9
+                )}
+                circulars={data.circulars}
+                listTitle={
+                  data.circulars === "TT133"
+                    ? financialReportName133.slice(0, 27)
+                    : financialReportName24.slice(0, 9)
+                }
+              ></DataTableMain_2>
+              <DataTableMain_2
+                fields={["Nguồn vốn"]}
+                data={data.listFinancialReport.slice(
+                  data.circulars === "TT133" ? 27 : 9
+                )}
+                circulars={data.circulars}
+                listTitle={
+                  data.circulars === "TT133"
+                    ? financialReportName133.slice(27)
+                    : financialReportName24.slice(9)
+                }
+              ></DataTableMain_2>
+            </ScrollView>
+          ) : (
+            <ScrollView>
+              <VStack space={5} alignItems={"center"}>
+                <SkeletonTable length={6} numberInLine={1} />
+                <SkeletonTable length={5} numberInLine={1} />
+              </VStack>
+            </ScrollView>
+          )}
+        </View>
+      </SafeAreaView>
     </Drawer>
   );
 }

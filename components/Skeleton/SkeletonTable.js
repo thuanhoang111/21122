@@ -26,7 +26,6 @@ function SkeletonTable({ length = 5, numberInLine = 1 }) {
       </HStack>
       <HStack
         w={"100%"}
-        maxW="400"
         rounded={"3xl"}
         marginTop={1}
         alignItems="center"

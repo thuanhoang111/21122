@@ -1,18 +1,28 @@
 import * as request from "../../API/util/httpRequest";
 
-export const postWithBody = async (path, q) => {
+export const handlePostWithBody = async (path, body, header) => {
   try {
-    const res = await request.post(`${path}`, q);
-    return res;
+    const res = await request.post(`${path}`, body, header);
+    return res
+      ? res
+      : {
+          isError: true,
+          errorDescription: "Không có dữ liệu.Vui lòng chọn lại năm",
+        };
   } catch (error) {
-    return error;
+    return { isError: true, errorDescription: "Đã xảy ra lỗi " };
   }
 };
-export const postWithParam = async (path, param) => {
+export const HandlePostWithParam = async (path, param, header) => {
   try {
-    const res = await request.postWithParam(`${path}?${param}`);
-    return res;
+    const res = await request.post(`${path}?${param}`, "", header);
+    return res
+      ? res
+      : {
+          isError: true,
+          errorDescription: "Không có dữ liệu.Vui lòng chọn lại năm",
+        };
   } catch (error) {
-    return error;
+    return { isError: true, errorDescription: "Đã xảy ra lỗi " };
   }
 };

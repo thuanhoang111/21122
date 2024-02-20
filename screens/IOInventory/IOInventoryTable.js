@@ -3,21 +3,28 @@ import {
   Divider,
   HStack,
   Heading,
-  ScrollView,
   VStack,
   Text,
   Pressable,
 } from "native-base";
-import { StyleSheet } from "react-native";
-import * as constantMain from "../../constants/ConstantMain";
+import { StyleSheet, VirtualizedList } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Feather from "react-native-vector-icons/Feather";
-import IconAntDesign from "react-native-vector-icons/AntDesign";
-const widthOfTable = constantMain.widthOfScreen * 0.95;
-function InOutputInventoryTable({ data = [], fields, onclick }) {
+import { memo, useContext, useEffect } from "react";
+import { formatMoneyToVN } from "../../constants/ConstantFunc";
+import { widthOfScreen } from "../../constants/ConstantMain";
+import { MainContext } from "../MainContext";
+import NoData from "../../components/NoData/NoData";
+function IOInventoryTable({ data = [], fields, onClick, page }) {
+  const mainContext = useContext(MainContext);
+  const isIos = mainContext.isIos;
+  const getItemCount = (_data) => data.length;
+  const listWidth = ["35%", "28%", "25%"];
+  useEffect(() => {
+    data.length != 0 &&
+      this.IOInventoryTableRef.scrollToOffset({ animated: true, offset: 0 });
+  }, [page]);
   return (
-    <Center style={styles.table}>
+    <Center style={styles.table} flex={15}>
       <HStack
         style={styles.tableHeader}
         justifyContent={"flex-start"}
@@ -28,42 +35,28 @@ function InOutputInventoryTable({ data = [], fields, onclick }) {
             <Pressable
               py={2}
               key={index}
+              width={listWidth[index]}
               // onPressIn={() => {
               //   item === "Ngày" && setInverseDate(!inverseDate);
               // }}
             >
-              <Heading
-                size={"sm"}
-                key={index}
-                style={
-                  (styles.titleHeader,
-                  {
-                    width: widthOfTable / fields.length - 20,
-                  })
-                }
-              >
+              <Heading size={"sm"} key={index} style={styles.titleHeader}>
                 {item}
-                {item === "Ngày" && (
-                  <IconAntDesign
-                    name={inverseDate ? "caretup" : "caretdown"}
-                    size={10}
-                  />
-                )}
               </Heading>
             </Pressable>
           );
         })}
       </HStack>
-
-      <VStack style={styles.tableContent}>
-        <ScrollView
-          style={styles.tableContentScrollView}
-          nestedScrollEnabled={true}
-        >
-          {data.length != 0 ? (
-            data.map((item, index) => {
+      <VStack style={styles.tableContent} flex={15}>
+        {data.length != 0 ? (
+          <VirtualizedList
+            ref={(ref) => {
+              this.IOInventoryTableRef = ref;
+            }}
+            initialNumToRender={1}
+            renderItem={({ item, index }) => {
               return (
-                <Pressable key={index} onPress={() => onclick(item)}>
+                <Pressable onPress={() => onClick(item)}>
                   {({ isHovered, isFocused, isPressed }) => {
                     return (
                       <>
@@ -72,7 +65,7 @@ function InOutputInventoryTable({ data = [], fields, onclick }) {
                           style={styles.boxItemContent}
                           paddingLeft={0.5}
                           alignItems={"center"}
-                          space={"0.5"}
+                          space={1}
                           bg={
                             isPressed
                               ? "coolGray.200"
@@ -83,39 +76,39 @@ function InOutputInventoryTable({ data = [], fields, onclick }) {
                         >
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "30%" }]}
+                            style={[{ width: listWidth[0] }]}
                           >
                             <Text fontSize={"sm"} bold>
-                              {item.productionCode}
-                            </Text>
-                            <Text fontSize={"xs"}>{item.productionName}</Text>
-                          </VStack>
-                          <VStack
-                            alignItems={"flex-start"}
-                            style={[{ width: "30%" }]}
-                          >
-                            <Text fontSize={"sm"} bold>
-                              {item.quantityImport}
+                              {item.ProductCode || "X"}
                             </Text>
                             <Text fontSize={"xs"}>
-                              {item.moneyImport.toLocaleString("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                              })}
+                              {item.ProductName || "X"}
                             </Text>
                           </VStack>
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "30%" }]}
+                            style={[{ width: listWidth[1] }]}
                           >
                             <Text fontSize={"sm"} bold>
-                              {item.quantityExport}
+                              {item.ImportQuantity || "0"}
                             </Text>
                             <Text fontSize={"xs"}>
-                              {item.moneyExport.toLocaleString("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                              })}
+                              {item.ImportValue
+                                ? formatMoneyToVN(item.ImportValue, "đ")
+                                : "0đ"}
+                            </Text>
+                          </VStack>
+                          <VStack
+                            alignItems={"flex-start"}
+                            style={[{ width: listWidth[2] }]}
+                          >
+                            <Text fontSize={"sm"} bold>
+                              {item.ExportQuantity || "0"}
+                            </Text>
+                            <Text fontSize={"xs"}>
+                              {item.ExportValue
+                                ? formatMoneyToVN(item.ExportValue, "đ")
+                                : "0đ"}
                             </Text>
                           </VStack>
                           <HStack alignItems={"center"}>
@@ -131,23 +124,17 @@ function InOutputInventoryTable({ data = [], fields, onclick }) {
                   }}
                 </Pressable>
               );
-            })
-          ) : (
-            <VStack
-              space="5"
-              alignItems={"center"}
-              justifyContent={"center"}
-              opacity={0.5}
-              paddingTop={10}
-            >
-              <MaterialCommunityIcons
-                size={"150"}
-                name="database-off-outline"
-              />
-              <Text fontSize={"lg"}>Không có dữ liệu </Text>
-            </VStack>
-          )}
-        </ScrollView>
+            }}
+            keyExtractor={(item, index) => index}
+            getItemCount={getItemCount}
+            getItem={(data, index) => {
+              return data[index];
+            }}
+            data={data}
+          />
+        ) : (
+          <NoData fontSizeText="lg" />
+        )}
       </VStack>
     </Center>
   );
@@ -155,18 +142,18 @@ function InOutputInventoryTable({ data = [], fields, onclick }) {
 
 const styles = StyleSheet.create({
   table: {
-    marginHorizontal: constantMain.widthOfScreen * 0.025,
-    marginTop: 10,
+    marginHorizontal: widthOfScreen * 0.025,
+    marginVertical: 10,
     elevation: 5,
     shadowColor: "#52006A",
     backgroundColor: "#fff",
     borderRadius: 20,
     fontSize: 8,
     overflow: "hidden",
-    marginBottom: 10,
   },
   tableHeader: {
     paddingLeft: "5%",
+    paddingVertical: 5,
     backgroundColor: "#D9D9D9",
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
@@ -178,36 +165,12 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     color: "#000",
   },
-  totalPrice: {
-    fontSize: 17,
-    fontWeight: 800,
-  },
   tableContent: {
     marginTop: 10,
-    maxHeight:
-      Platform.OS === "ios"
-        ? constantMain.heightOfScreen * 0.58
-        : constantMain.heightOfScreen * 0.6,
+    paddingLeft: 5,
   },
-  tableContentScrollView: {
-    paddingLeft: 10,
-  },
-
   boxItemContent: {
     paddingVertical: 10,
   },
-  textTotalItemContent: {
-    fontSize: 16,
-    fontWeight: 700,
-  },
-  boxTotalContent: {
-    alignContent: "center",
-    backgroundColor: "#dddddc",
-    paddingLeft: 10,
-    paddingVertical: 10,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
 });
-export default InOutputInventoryTable;
+export default memo(IOInventoryTable);

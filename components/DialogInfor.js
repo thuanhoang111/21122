@@ -1,15 +1,9 @@
-import {
-  FormControl,
-  Input,
-  Select,
-  CheckIcon,
-  WarningOutlineIcon,
-} from "native-base";
+import { FormControl, Input, Select, CheckIcon } from "native-base";
 import { useEffect, useState } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Dialog, Portal, Provider, Button } from "react-native-paper";
+import { Dialog, Portal, Button } from "react-native-paper";
 import moment from "moment";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { Platform } from "react-native";
 /**
  *
  * @param {Boolean}  isShowDialog
@@ -84,49 +78,47 @@ function DialogInfor({
       )}
     </Dialog>
   ) : (
-    <Provider>
-      <Portal>
-        <Dialog
-          visible={isShowDialog}
-          onDismiss={hideDialog}
-          style={{ width: "87%", top: 50, position: "absolute" }}
-        >
-          <Dialog.Title>Chỉnh sửa thông tin Người dùng </Dialog.Title>
+    <Portal>
+      <Dialog
+        visible={isShowDialog}
+        onDismiss={hideDialog}
+        style={{ width: "87%", top: 50, position: "absolute" }}
+      >
+        <Dialog.Title>Chỉnh sửa thông tin Người dùng </Dialog.Title>
 
-          <Dialog.Content>
-            <FormControl>
-              <FormControl.Label>{inforOfField.title}</FormControl.Label>
-              {inforOfField.field !== "label" ? (
-                <>
-                  <Input
-                    onChangeText={(e) => setValueInput(e)}
-                    placeholder={`Nhập thông tin ${inforOfField.title}`}
-                  ></Input>
-                </>
-              ) : (
-                <Select
-                  accessibilityLabel="Vui lòng chọn chức vụ"
-                  placeholder="Vui lòng chọn chức vụ"
-                  _selectedItem={{
-                    bg: "teal.600",
-                    endIcon: <CheckIcon size={5} />,
-                  }}
-                  mt="1"
-                  w="100%"
-                  onValueChange={(e) => setValueInput(e)}
-                >
-                  <Select.Item label="Kế toán" value={4} />
-                  <Select.Item label="Giám đốc" value={7} />
-                </Select>
-              )}
-            </FormControl>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => submitDialog()}>Xác nhận</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-    </Provider>
+        <Dialog.Content>
+          <FormControl>
+            <FormControl.Label>{inforOfField.title}</FormControl.Label>
+            {inforOfField.field !== "label" ? (
+              <>
+                <Input
+                  onChangeText={(e) => setValueInput(e)}
+                  placeholder={`Nhập thông tin ${inforOfField.title}`}
+                ></Input>
+              </>
+            ) : (
+              <Select
+                accessibilityLabel="Vui lòng chọn chức vụ"
+                placeholder="Vui lòng chọn chức vụ"
+                _selectedItem={{
+                  bg: "teal.600",
+                  endIcon: <CheckIcon size={5} />,
+                }}
+                mt="1"
+                w="100%"
+                onValueChange={(e) => setValueInput(e)}
+              >
+                <Select.Item label="Kế toán" value={4} />
+                <Select.Item label="Giám đốc" value={7} />
+              </Select>
+            )}
+          </FormControl>
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button onPress={() => submitDialog()}>Xác nhận</Button>
+        </Dialog.Actions>
+      </Dialog>
+    </Portal>
   );
 }
 

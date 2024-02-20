@@ -6,72 +6,147 @@ import {
   Text,
   VStack,
   View,
+  Pressable,
+  Select,
+  CheckIcon,
 } from "native-base";
 import { StyleSheet } from "react-native";
-import { heightOfScreen, widthOfScreen } from "../../constants/ConstantMain";
-import * as ConstantFunction from "../../constants/ConstantFunc";
-import { financialReportName } from "../../model/data";
-function RevenueAnalysisTable({ tableName, data }) {
+import { widthOfScreen } from "../../constants/ConstantMain";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { linkClickColor, linkColor } from "../../constants/ConstantStyle";
+import NoData from "./../../components/NoData/NoData";
+import { MainContext } from "../MainContext";
+import { useContext } from "react";
+function RevenueAnalysisTable({
+  data,
+  showDetail = () => {},
+  year,
+  onChangeYear,
+}) {
+  const mainContext = useContext(MainContext);
+  const permissionUser = mainContext.dataUser.permission;
   return (
     <View style={styles.table}>
-      <View style={styles.tableHeader}>
-        <Heading
-          size={"md"}
-          style={(styles.titleHeader, { width: widthOfScreen })}
-        >
-          {tableName}
-        </Heading>
-      </View>
-
-      <VStack style={styles.tableContent}>
-        <ScrollView
-          style={styles.tableContentScrollView}
-          nestedScrollEnabled={true}
-        >
-          {data.map((item, index) => {
+      <HStack style={styles.tableHeader} alignItems={"center"}>
+        <HStack alignItems={"center"}>
+          <Heading size={"md"} style={styles.titleHeader}>
+            Năm:
+          </Heading>
+          <Select
+            selectedValue={year}
+            width="90"
+            borderWidth={0}
+            dropdownIcon={true}
+            textDecorationLine={"underline"}
+            placeholder={year.toString()}
+            _selectedItem={{
+              endIcon: <CheckIcon size="5" />,
+            }}
+            placeholderTextColor={"black"}
+            mt={1}
+            fontSize={"md"}
+            variant="underlined"
+            onValueChange={(itemValue) => {
+              mainContext.onChangeLoading(true);
+              onChangeYear(itemValue);
+            }}
+          >
+            {permissionUser.map((item, index) => {
+              return (
+                <Select.Item
+                  key={index}
+                  label={item.year}
+                  value={item.year.toString()}
+                />
+              );
+            })}
+          </Select>
+        </HStack>
+        <Pressable onPress={() => showDetail()}>
+          {({ isHovered, isFocused, isPressed }) => {
             return (
-              <View key={index}>
-                <HStack style={styles.boxItemContent}>
-                  <View style={{ marginHorizontal: 5 }}>
-                    <Text
-                      style={{
-                        width: widthOfScreen * 0.5,
-                      }}
-                    >
-                      {ConstantFunction.handleGetTitleWithCode(
-                        financialReportName,
-                        item.AccountCode
-                      )}
-                    </Text>
-                  </View>
-                  <View style={{ marginHorizontal: 5 }}>
-                    <Text
-                      style={{
-                        width: widthOfScreen * 0.35,
-                        textAlign: "right",
-                      }}
-                    >
-                      {item.Money.toLocaleString()}
-                    </Text>
-                  </View>
-                </HStack>
-                <Divider></Divider>
+              <View
+                flexDirection={"row"}
+                alignItems={"center"}
+                justifyContent={"space-between"}
+              >
+                <Text
+                  fontSize={"md"}
+                  color={
+                    isPressed
+                      ? linkClickColor
+                      : isHovered
+                      ? linkClickColor
+                      : linkColor
+                  }
+                >
+                  Xem chi tiết
+                </Text>
+                <MaterialIcons
+                  name="keyboard-arrow-right"
+                  size={15}
+                  color={
+                    isPressed
+                      ? linkClickColor
+                      : isHovered
+                      ? linkClickColor
+                      : linkColor
+                  }
+                />
               </View>
             );
-          })}
-        </ScrollView>
+          }}
+        </Pressable>
+      </HStack>
+
+      <VStack style={styles.tableContent}>
+        {data.length != 0 ? (
+          <ScrollView
+            style={styles.tableContentScrollView}
+            nestedScrollEnabled={true}
+          >
+            {data.map((item, index) => {
+              return (
+                <View key={index}>
+                  <HStack style={styles.boxItemContent}>
+                    <View style={{ marginHorizontal: 5 }}>
+                      <Text
+                        style={{
+                          width: widthOfScreen * 0.5,
+                        }}
+                      >
+                        {item.AccountName}
+                      </Text>
+                    </View>
+                    <View style={{ marginHorizontal: 5 }}>
+                      <Text
+                        style={{
+                          width: widthOfScreen * 0.35,
+                          textAlign: "right",
+                        }}
+                      >
+                        {item.Money.toLocaleString()}
+                      </Text>
+                    </View>
+                  </HStack>
+                  {index != data.length - 1 && <Divider></Divider>}
+                </View>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <NoData height={"100%"} />
+        )}
       </VStack>
     </View>
   );
 }
 const styles = StyleSheet.create({
   table: {
+    flex: 4,
     width: widthOfScreen * 0.95,
-    // maxHeight:
-    //   Platform.OS === "ios" ? heightOfScreen * 0.6 : heightOfScreen * 0.75,
-    height: heightOfScreen * 0.4,
     marginHorizontal: widthOfScreen * 0.025,
-    marginTop: 20,
+    margin: 20,
     elevation: 5,
     shadowColor: "#52006A",
     backgroundColor: "#fff",
@@ -80,14 +155,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   tableHeader: {
-    paddingVertical: 10,
-    paddingLeft: 20,
+    padding: 5,
+    paddingHorizontal: 10,
     backgroundColor: "#D9D9D9",
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
     display: "flex",
     flexDirection: "row",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
   },
   titleHeader: {
     fontSize: 16,
@@ -99,9 +174,7 @@ const styles = StyleSheet.create({
     fontWeight: 800,
   },
   tableContent: {
-    marginTop: 10,
-    maxHeight:
-      Platform.OS === "ios" ? heightOfScreen * 0.5 : heightOfScreen * 0.55,
+    flex: 1,
   },
   tableContentScrollView: {
     paddingLeft: 10,

@@ -1,10 +1,10 @@
 import { HStack, Heading, VStack, Text, Center, Skeleton } from "native-base";
 import Entypo from "react-native-vector-icons/Entypo";
 import CashBookMoneyTable from "./CashBookMoneyTable";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useEffect } from "react";
 import Pagination from "./../../components/Pagination/Pagination";
-import axios from "axios";
+import * as Get from "../../API/service/Get";
 import SkeletonTable from "../../components/Skeleton/SkeletonTable";
 import { useToggle } from "@uidotdev/usehooks";
 import { Alert, SafeAreaView } from "react-native";
@@ -12,19 +12,25 @@ import { Drawer } from "react-native-drawer-layout";
 import Filter from "../../components/Filter/Filter";
 import Header from "../../components/Header/Header";
 import { formatMoneyToVN } from "../../constants/ConstantFunc";
+import { MainContext } from "../MainContext";
+import { heightOfScreen, widthOfScreen } from "../../constants/ConstantMain";
 
 const listTitle = ["Ngày", "Thu", "Chi", "Tồn"];
 function CashBookMoneyDetail({ route, navigation }) {
-  const dataUser = route.params.data;
-  const inforFilter = route.params.inforFilter;
-  const lastPermissionYear =
-    dataUser.permission[dataUser.permission.length - 1].year;
+  const mainContext = useContext(MainContext);
+  const dataUser = mainContext.dataUser;
+  const inforFilter = mainContext.inforFilter;
+  const lastPermissionYear = mainContext.lastPermissionYear;
+  const isIos = mainContext.isIos;
   const [open, setOpen] = useState(false);
   const [data, setData] = useState();
   const [page, setPage] = useState(1);
-  console.log(inforFilter);
+  const [totalPrice, setTotalPrice] = useState({
+    openingBalance: 0,
+    endingBalance: 0,
+  });
   const [inverseDate, setInverseDate] = useToggle(false);
-  const quantityItem = 11;
+  const quantityItem = 20;
   const lstBankAccount = [
     {
       AccountCode: 0,
@@ -42,45 +48,91 @@ function CashBookMoneyDetail({ route, navigation }) {
    * @returns data
    */
   const handleGetData = (startMonth, endMonth, year, accountType) => {
-    axios
-      .get(
-        `http://192.168.90.84:1375/api/DongTienMat/CashBook_Detail?m1=${startMonth}&m2=${endMonth}&AccountType=${accountType}&userId=${dataUser.id}&year=${year}`
-      )
-      .then((res) => {
-        return res.data;
-      })
+    Get.HandleGetWithParam(
+      `DongTienMat/CashBook_Detail`,
+      `m1=${startMonth}&m2=${endMonth}&AccountType=${accountType}&userId=${dataUser.id}&year=${year}`
+    )
       .then((data) => {
-        if (data.error) {
-          Alert.alert("Thông báo", data.errorDescription, [{ text: "Ok" }]);
+        if (data.isError || data.error) {
+          Alert.alert(
+            data.errorMsg || "Thông báo",
+            data.errorDescription || "Không có dữ liệu vui lòng chọn lại năm",
+            [{ text: "Ok" }]
+          );
+          setData([]);
+          handleGetTotalData(startMonth, endMonth, year, accountType);
         } else {
           data && data.results && setData(data.results[0]);
           setPage(1);
-          setOpen(false);
+          const currentData = data.results[0];
+
+          setTotalPrice(
+            currentData.length != 0
+              ? {
+                  openingBalance:
+                    currentData[0].Expenditure != 0
+                      ? currentData[0].Balance + currentData[0].Expenditure
+                      : currentData[0].Balance - currentData[0].Revenue,
+                  endingBalance:
+                    currentData[currentData.length - 1].Balance -
+                    currentData[currentData.length - 1].SpentTax +
+                    currentData[currentData.length - 1].IncomeTax,
+                  // + currentData[currentData.length - 1].Revenue,
+                }
+              : { openingBalance: 0, endingBalance: 0 }
+          );
         }
       })
-      .catch(() =>
-        setTimeout(() => {
-          setData([]);
-        }, 3000)
-      );
+      .finally(() => {
+        setOpen(false);
+        mainContext.onChangeLoading(false);
+      });
+  };
+  /**
+   * Author: ThuanHoang 19/09/2023
+   * Function get data from Api CashMoney
+   * @param {ArrayList} data
+   */
+  const handleGetTotalData = (startMonth, endMonth, year, accountType) => {
+    Get.HandleGetWithParam(
+      `DongTienMat/CashBook`,
+      `m1=${startMonth}&m2=${endMonth}&AccountType=${accountType}&userId=${dataUser.id}&year=${year}`
+    )
+      .then((data) => {
+        const currentData = data.results[0];
+        if (!data.isError || !data.error || data.results[0] != undefined) {
+          setTotalPrice(
+            inforFilter.accountCode == 0
+              ? {
+                  openingBalance: currentData.TienDuDauKy,
+                  endingBalance: currentData.TienTonCuoiKy,
+                }
+              : {
+                  openingBalance: currentData.TienDuDauKyNgoaiTe,
+                  endingBalance: currentData.TienDuCuoiKyNgoaiTe,
+                }
+          );
+        }
+      })
+      .finally(() => {
+        mainContext.onChangeLoading(false);
+      });
   };
   useEffect(() => {
     data && data.reverse();
     setPage(1);
   }, [inverseDate]);
   useEffect(() => {
-    inforFilter
-      ? handleGetData(
-          inforFilter.startMonth,
-          inforFilter.endMonth,
-          inforFilter.year,
-          inforFilter.accountCode
-        )
-      : handleGetData(1, 12, lastPermissionYear, 0);
+    handleGetData(
+      inforFilter.startMonth || 1,
+      inforFilter.endMonth || 12,
+      inforFilter.year || lastPermissionYear,
+      0
+    );
   }, []);
   return (
     <Drawer
-      swipeEdgeWidth={40}
+      swipeEdgeWidth={widthOfScreen * 0.5}
       swipeMinDistance={100}
       swipeMinVelocity={1000}
       drawerPosition="right"
@@ -89,6 +141,7 @@ function CashBookMoneyDetail({ route, navigation }) {
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       hideStatusBarOnOpen
+      swipeEnabled={isIos}
       renderDrawerContent={() => {
         return (
           <Filter
@@ -103,39 +156,25 @@ function CashBookMoneyDetail({ route, navigation }) {
     >
       <Header
         onBack={() => navigation.goBack()}
-        title={"Chi Tiết Sổ Quỹ"}
+        title={"Chi tiết sổ quỹ"}
         onClick={() => setOpen(true)}
         isRightIcon
       />
       <SafeAreaView>
-        <VStack>
+        <VStack height={heightOfScreen - 200}>
           <VStack px={3} py={3}>
             <HStack
               space="3"
               alignItems="center"
               justifyContent={"space-between"}
             >
-              <Heading fontSize={"xl"}>
+              <HStack alignItems={"center"}>
                 <Entypo name="dot-single" size={32} />
-                Số dư đầu kì:
-              </Heading>
-              <Text fontSize={"xl"}>
-                {/* {inforBalance.beginBalance
-                  ? inforBalance.beginBalance.toLocaleString("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    })
-                  : "0đ"} */}
-                {data ? (
-                  data[data.length - 1] ? (
-                    formatMoneyToVN(
-                      data[0].Expenditure != 0
-                        ? data[0].Balance + data[0].Expenditure
-                        : data[0].Balance + data[0].Revenue
-                    )
-                  ) : (
-                    formatMoneyToVN(0)
-                  )
+                <Heading fontSize={20}>Số dư đầu kì:</Heading>
+              </HStack>
+              <Text fontSize={20}>
+                {totalPrice ? (
+                  formatMoneyToVN(totalPrice.openingBalance, "đ")
                 ) : (
                   <Skeleton.Text w={"60%"} lines={1} borderRadius={10} />
                 )}
@@ -146,23 +185,13 @@ function CashBookMoneyDetail({ route, navigation }) {
               alignItems="center"
               justifyContent={"space-between"}
             >
-              <Heading fontSize={"xl"}>
+              <HStack alignItems={"center"}>
                 <Entypo name="dot-single" size={32} />
-                Số dư cuối kì:
-              </Heading>
+                <Heading fontSize={"xl"}>Số dư cuối kì:</Heading>
+              </HStack>
               <Text fontSize={"xl"}>
-                {data ? (
-                  data[data.length - 1] ? (
-                    formatMoneyToVN(
-                      data[data.length - 1].Expenditure != 0
-                        ? data[data.length - 1].Balance +
-                            data[data.length - 1].Expenditure
-                        : data[data.length - 1].Balance +
-                            data[data.length - 1].Revenue
-                    )
-                  ) : (
-                    formatMoneyToVN(0)
-                  )
+                {totalPrice ? (
+                  formatMoneyToVN(totalPrice.endingBalance, "đ")
                 ) : (
                   <Skeleton.Text w={"60%"} lines={1} borderRadius={10} />
                 )}
@@ -170,21 +199,18 @@ function CashBookMoneyDetail({ route, navigation }) {
             </HStack>
           </VStack>
           {data ? (
-            <>
-              <CashBookMoneyTable
-                data={data.slice(
-                  (page - 1) * quantityItem,
-                  page * quantityItem
-                )}
-                fields={listTitle}
-                inverseDate={inverseDate}
-                setInverseDate={setInverseDate}
-              ></CashBookMoneyTable>
-            </>
+            <CashBookMoneyTable
+              data={data.slice((page - 1) * quantityItem, page * quantityItem)}
+              fields={listTitle}
+              inverseDate={inverseDate}
+              setInverseDate={setInverseDate}
+              page={page}
+            ></CashBookMoneyTable>
           ) : (
             <>
               <Center
                 w="100%"
+                paddingTop={4}
                 style={{
                   borderRadius: 25,
                   zIndex: 100,
@@ -206,6 +232,7 @@ function CashBookMoneyDetail({ route, navigation }) {
               alignItems={"center"}
               justifyContent={"flex-end"}
               paddingX={3}
+              flex={1}
             >
               <Pagination
                 callBack={setPage}

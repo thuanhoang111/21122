@@ -1,49 +1,47 @@
 import {
-  Alert,
   Button,
-  CloseIcon,
-  HStack,
-  IconButton,
-  NativeBaseProvider,
-  Text,
   VStack,
-  Toast,
+  WarningOutlineIcon,
+  Input,
+  FormControl,
+  useToast,
 } from "native-base";
-import { useEffect, useRef, useState } from "react";
-import { Dimensions } from "react-native";
-import { StyleSheet } from "react-native";
-import { Divider, List, TextInput } from "react-native-paper";
+import { useEffect, useState } from "react";
+import { Keyboard, SafeAreaView } from "react-native";
+import { Divider, List } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StoreInfoUser } from "../../constants/API";
 import IconIonicons from "react-native-vector-icons/Ionicons";
 import { View } from "react-native";
-
 import * as Post from "../../API/service/Post";
-import { TextField } from "react-native-material-textfield";
+import { useObjectState } from "@uidotdev/usehooks";
+import { Controller, useForm } from "react-hook-form";
+import ToastNotification from "../../components/CustomToast/ToastNotification";
+import { widthOfScreen } from "./../../constants/ConstantMain";
+import Header from "../../components/Header/Header";
+import * as Application from "expo-application";
 
-function SettingScreen() {
-  const id = "test-toast";
-
+function SettingScreen({ navigation, route }) {
+  const toast = useToast();
+  const initialError = {
+    currentPasswordError: false,
+    newPasswordError: false,
+    confirmPasswordError: false,
+    confirmPasswordText: "Vui lòng nhập đầy đủ các thông tin",
+  };
   const [expandedPassword, setExpandedPassword] = useState(false);
   const [expandedInfoVersion, setExpandedInfoVersion] = useState(false);
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const currentPasswordRef = useRef(null);
-  const confirmPasswordRef = useRef(null);
-  const newPasswordRef = useRef(null);
-
-  const [showError, setShowError] = useState({});
-  // const [sho]
-
-  const [isDisableBtnSubmit, setIsDisableBtnSubmit] = useState(false);
-  const [isHiddenPassword, setIsHiddenPassword] = useState(false);
+  const [isHiddenPassword, setIsHiddenPassword] = useState(true);
   const [dataUser, setDataUser] = useState();
-
   const [isLoading, setIsLoading] = useState(false);
-
+  const [showError, setShowError] = useObjectState(initialError);
+  const { control, reset, getValues } = useForm({
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
   const handleShowAccordion = (callback, state) => callback(!state);
 
   const getUserID = async () => {
@@ -53,263 +51,278 @@ function SettingScreen() {
       setDataUser(jsonUser);
     } catch (error) {}
   };
-
-  const ToastAlert = ({
-    id,
-    status,
-    variant,
-    title,
-    description,
-    isClosable,
-    ...rest
-  }) => (
-    <Alert
-      maxWidth="100%"
-      alignSelf="center"
-      flexDirection="row"
-      status={status ? status : "error"}
-      variant={variant}
-      {...rest}
-    >
-      <VStack space={1} flexShrink={1} w="90%">
-        <HStack
-          flexShrink={1}
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <HStack space={2} flexShrink={1} alignItems="center">
-            <Alert.Icon />
-            <Text
-              fontSize="md"
-              fontWeight="medium"
-              flexShrink={1}
-              color={
-                variant === "solid"
-                  ? "lightText"
-                  : variant !== "outline"
-                  ? "darkText"
-                  : null
-              }
-            >
-              {title}
-            </Text>
-          </HStack>
-        </HStack>
-        <Text
-          px="6"
-          color={
-            variant === "solid"
-              ? "lightText"
-              : variant !== "outline"
-              ? "darkText"
-              : null
-          }
-        >
-          {description}
-        </Text>
-      </VStack>
-    </Alert>
-  );
-
   useEffect(() => {
     getUserID();
   }, []);
-  const handleSubmit = async () => {
+  const handleShowError = (data) => {
+    data.currentPassword.trim() === "" &&
+      setShowError(() => ({
+        currentPasswordError: true,
+      }));
+    data.newPassword.trim() === "" &&
+      setShowError(() => ({
+        newPasswordError: true,
+      }));
+    data.confirmPassword.trim() === "" &&
+      setShowError(() => ({
+        confirmPasswordError: true,
+      }));
+  };
+  const handleChangePassword = async (data) => {
     setIsLoading(true);
-    await Post.postWithParam(
-      `ChangePassword`,
-      `userID_PW=${dataUser.UserInfo.id}&oldpassword=${currentPassword}&newpassword=${newPassword}`
-    )
+    await Post.handlePostWithBody(`ChangePassword`, {
+      userID_PW: dataUser.UserInfo.id,
+      oldpassword: data.currentPassword,
+      newpassword: data.newPassword,
+    })
       .then((data) => {
-        setShowError(data);
-        newPasswordRef.current.clear();
-        currentPasswordRef.current.clear();
-        confirmPasswordRef.current.clear();
-        {
-          data.code === "0" &&
-            Toast.show({
-              placement: "top",
-              render: () => {
-                return (
-                  <ToastAlert
-                    status={data.code === "0" && "success"}
-                    {...{
-                      title: "Thông báo ",
-                      variant: "top-accent",
-                      description: data.errorDescription,
-                      isClosable: true,
-                    }}
-                  />
-                );
-              },
-            });
-        }
-        if (data.code === "-2") {
-          currentPasswordRef.current.focus();
-        } else if (data.code === "-3") {
-          newPasswordRef.current.focus();
-        }
+        reset();
+        data &&
+          toast.show({
+            avoidKeyboard: true,
+            placement: "top",
+            duration: 2000,
+            render: ({ id }) => {
+              return (
+                <ToastNotification
+                  id={id}
+                  status={data.code === "0" ? "success" : "error"}
+                  variant={"left-accent"}
+                  title={"Thông báo"}
+                  description={data.errorDescription}
+                  onClose={() => toast.close(id)}
+                />
+              );
+            },
+          });
         setIsLoading(false);
       })
       .catch((error) => {
         setIsLoading(false);
-        alert(error);
+        toast.show({
+          render: () => {
+            return (
+              <ToastNotification
+                variant={"left-accent"}
+                title={"Thông báo"}
+                status={"error"}
+                description={"Đã xảy khi thực hiện chức năng"}
+              />
+            );
+          },
+        });
       });
   };
-  const checkRegex = () => {
+  const handleSubmit = async () => {
+    Keyboard.dismiss();
+    setShowError(initialError);
+    let data = getValues();
     if (
-      newPassword.length > 0 &&
-      currentPassword.length > 0 &&
-      confirmPassword.length > 0 &&
-      newPassword === confirmPassword
+      data.confirmPassword !== "" &&
+      data.currentPassword !== "" &&
+      data.newPassword !== ""
     ) {
-      return true;
+      data.confirmPassword !== data.newPassword
+        ? setShowError(() => ({
+            confirmPasswordError: true,
+            confirmPasswordText: "Xác nhận mật khẩu không đúng",
+          }))
+        : handleChangePassword(data);
     } else {
-      return false;
-    }
-  };
-  useEffect(() => {
-    setNewPassword("");
-    setConfirmPassword("");
-    setCurrentPassword("");
-  }, [expandedPassword]);
-  const handleShowAlertSubmit = () => {
-    setShowError({
-      code: "1",
-      errorDescription: "Vui lòng nhập đầy đủ các thông tin",
-    });
-  };
-  useEffect(() => {
-    const isSubmit = checkRegex();
-    setIsDisableBtnSubmit(isSubmit);
-  }, [confirmPassword, newPassword, currentPassword]);
-
-  const handleCheckError = (field, code, inforError) => {
-    if (field.length === 0) {
-      if (inforError.code === "1" || inforError.code === code) {
-        return inforError.errorDescription;
-      }
+      handleShowError(data);
     }
   };
   return (
-    <NativeBaseProvider>
-      <List.Section>
-        <List.Accordion
-          title="Thay đổi mật khẩu"
-          titleStyle={{ fontSize: 18, fontWeight: 500, color: "black" }}
-          expanded={expandedPassword}
-          onPress={() =>
-            handleShowAccordion(setExpandedPassword, expandedPassword)
-          }
-          left={(props) => (
-            <List.Icon {...props} color="#8ecb63" icon="key-variant" />
-          )}
-        >
-          <View
-            style={{
-              alignSelf: "flex-end",
-              padding: 0,
-              position: "relative",
-              right: 20,
-              top: 19,
-              zIndex: 100,
-            }}
+    <>
+      <Header
+        onBack={() => navigation.goBack()}
+        title={"Thông tin tài khoản"}
+      ></Header>
+      <SafeAreaView>
+        <List.Section>
+          <List.Accordion
+            title="Thay đổi mật khẩu"
+            titleStyle={{ fontSize: 18, fontWeight: 500, color: "black" }}
+            expanded={expandedPassword}
+            onPress={() =>
+              handleShowAccordion(setExpandedPassword, expandedPassword)
+            }
+            left={(props) => (
+              <List.Icon {...props} color="#8ecb63" icon="key-variant" />
+            )}
           >
-            <IconIonicons
-              onPress={() => setIsHiddenPassword(!isHiddenPassword)}
-              name={isHiddenPassword ? "eye-off" : "eye"}
-              size={25}
-            ></IconIonicons>
-          </View>
-          <View style={{ width: widthOfScreen * 0.95 }}>
-            <TextField
-              label="Mật khẩu hiện tại"
-              value={currentPassword}
-              onChangeText={(currentPassword) =>
-                setCurrentPassword(currentPassword)
-              }
-              secureTextEntry={isHiddenPassword ? false : true}
-              ref={currentPasswordRef}
-              error={handleCheckError(currentPassword, "-2", showError)}
-              labelTextStyle={{ paddingTop: 5 }}
-            />
-            <TextField
-              label="Mật khẩu mới"
-              value={newPassword}
-              onChangeText={(newPassword) => setNewPassword(newPassword)}
-              secureTextEntry={isHiddenPassword ? false : true}
-              ref={newPasswordRef}
-              labelTextStyle={{ paddingTop: 5 }}
-              error={handleCheckError(newPassword, "-3", showError)}
-            />
-            <TextField
-              label="Xác nhận mật khẩu mới"
-              ref={confirmPasswordRef}
-              value={confirmPassword}
-              onChangeText={(confirmPassword) =>
-                setConfirmPassword(confirmPassword)
-              }
-              contextMenuHidden={true}
-              secureTextEntry={isHiddenPassword ? false : true}
-              error={handleCheckError(confirmPassword, "-3", showError)}
-              onBlur={() => confirmPasswordRef.current.clear()}
-              labelTextStyle={{ paddingTop: 5 }}
-            />
-            <List.Item
-              descriptionNumberOfLines={3}
-              description={
-                <Button
-                  background={isDisableBtnSubmit ? "#dc764c" : "#8d8e9c"}
-                  padding={0}
-                  height={8}
-                  style={{ width: widthOfScreen * 0.7 }}
-                  margin={"auto"}
-                  borderRadius={20}
-                  onPress={() => {
-                    isDisableBtnSubmit
-                      ? handleSubmit()
-                      : handleShowAlertSubmit();
+            <View
+              style={{
+                alignSelf: "flex-end",
+                padding: 0,
+                position: "relative",
+                right: 20,
+                top: 5,
+                zIndex: 100,
+              }}
+            >
+              <IconIonicons
+                onPress={() => setIsHiddenPassword(!isHiddenPassword)}
+                name={isHiddenPassword ? "eye-off" : "eye"}
+                size={25}
+              ></IconIonicons>
+            </View>
+            <VStack space={5} style={{ width: widthOfScreen * 0.95 }}>
+              <FormControl
+                isInvalid={showError.currentPasswordError ? true : false}
+                w="100%"
+                maxW="300px"
+              >
+                <Controller
+                  control={control}
+                  rules={{
+                    required: true,
                   }}
-                  isLoading={isLoading}
-                  isLoadingText="Đang xử lý"
-                  _pressed={{ opacity: 0.8 }}
+                  render={({ field: { onChange, value } }) => {
+                    return (
+                      <Input
+                        size={"lg"}
+                        placeholder="Nhập mật khẩu hiện tại"
+                        onFocus={() => {
+                          setShowError(() => ({
+                            currentPasswordError: false,
+                          }));
+                        }}
+                        variant={"underlined"}
+                        value={value}
+                        type={isHiddenPassword ? "password" : "text"}
+                        onChangeText={(e) => onChange(e)}
+                        returnKeyType="next"
+                        onSubmitEditing={() => {
+                          this.secondTextInput.focus();
+                        }}
+                      />
+                    );
+                  }}
+                  name="currentPassword"
+                ></Controller>
+                <FormControl.ErrorMessage
+                  leftIcon={<WarningOutlineIcon size="xs" />}
                 >
-                  xác nhận
-                </Button>
-              }
-            ></List.Item>
-          </View>
-        </List.Accordion>
-        <Divider></Divider>
-        <List.Accordion
-          title="Thông tin phiên bản"
-          expanded={expandedInfoVersion}
-          onPress={() =>
-            handleShowAccordion(setExpandedInfoVersion, expandedInfoVersion)
-          }
-          titleStyle={{ fontSize: 18, fontWeight: 500, color: "black" }}
-          left={(props) => (
-            <List.Icon {...props} color="#8ecb63" icon="information" />
-          )}
-        >
-          <List.Item title="Phiên bản thử nghiệm 1 " />
-          <List.Item title="Phiên bản thử nghiệm 2" />
-        </List.Accordion>
-      </List.Section>
-    </NativeBaseProvider>
+                  Vui lòng nhập đầy đủ các thông tin
+                </FormControl.ErrorMessage>
+              </FormControl>
+              <FormControl
+                isInvalid={showError.newPasswordError ? true : false}
+                w="100%"
+                maxW="300px"
+              >
+                <Controller
+                  control={control}
+                  rules={{
+                    required: true,
+                  }}
+                  render={({ field: { onChange, value } }) => {
+                    return (
+                      <Input
+                        size={"lg"}
+                        placeholder="Nhập mật khẩu mới"
+                        onFocus={() => {
+                          setShowError(() => ({
+                            newPasswordError: false,
+                          }));
+                        }}
+                        variant={"underlined"}
+                        value={value}
+                        type={isHiddenPassword ? "password" : "text"}
+                        onChangeText={(e) => onChange(e)}
+                        ref={(input) => {
+                          this.secondTextInput = input;
+                        }}
+                        returnKeyType="next"
+                        onSubmitEditing={() => {
+                          this.thirdTextInput.focus();
+                        }}
+                      />
+                    );
+                  }}
+                  name="newPassword"
+                ></Controller>
+                <FormControl.ErrorMessage
+                  leftIcon={<WarningOutlineIcon size="xs" />}
+                >
+                  Vui lòng nhập đầy đủ các thông tin
+                </FormControl.ErrorMessage>
+              </FormControl>
+              <FormControl
+                isInvalid={showError.confirmPasswordError ? true : false}
+                w="100%"
+                maxW="300px"
+              >
+                <Controller
+                  control={control}
+                  rules={{
+                    required: true,
+                  }}
+                  render={({ field: { onChange, value } }) => {
+                    return (
+                      <Input
+                        size={"lg"}
+                        placeholder="Xác nhận mật khẩu mới"
+                        onFocus={() => {
+                          setShowError(() => ({
+                            confirmPasswordError: false,
+                          }));
+                        }}
+                        variant={"underlined"}
+                        value={value}
+                        type={isHiddenPassword ? "password" : "text"}
+                        onChangeText={(e) => onChange(e)}
+                        ref={(input) => {
+                          this.thirdTextInput = input;
+                        }}
+                      />
+                    );
+                  }}
+                  name="confirmPassword"
+                ></Controller>
+                <FormControl.ErrorMessage
+                  leftIcon={<WarningOutlineIcon size="xs" />}
+                >
+                  {showError.confirmPasswordText}
+                </FormControl.ErrorMessage>
+              </FormControl>
+              <Button
+                background={"#dc764c"}
+                paddingY={10}
+                height={10}
+                marginY={5}
+                borderRadius={20}
+                onPress={() => {
+                  handleSubmit();
+                }}
+                isLoading={isLoading}
+                isLoadingText="Đang xử lý"
+                _pressed={{ opacity: 0.8 }}
+              >
+                xác nhận
+              </Button>
+            </VStack>
+          </List.Accordion>
+          <Divider></Divider>
+          <List.Accordion
+            title="Thông tin phiên bản"
+            expanded={expandedInfoVersion}
+            onPress={() =>
+              handleShowAccordion(setExpandedInfoVersion, expandedInfoVersion)
+            }
+            titleStyle={{ fontSize: 18, fontWeight: 500, color: "black" }}
+            left={(props) => (
+              <List.Icon {...props} color="#8ecb63" icon="information" />
+            )}
+          >
+            <List.Item
+              title={`Phiên bản hiện tại: ${Application.nativeBuildVersion}`}
+            />
+          </List.Accordion>
+        </List.Section>
+      </SafeAreaView>
+    </>
   );
 }
-const widthOfScreen = Dimensions.get("window").width;
-const style = StyleSheet.create({
-  input: {
-    width: 800,
-    height: 40,
-    borderWidth: 1,
-    padding: 10,
-    marginRight: "auto",
-    marginLeft: 10,
-    borderRadius: 5,
-    borderColor: "#bdbdc7",
-  },
-});
 export default SettingScreen;

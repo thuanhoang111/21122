@@ -20,7 +20,6 @@ import {
   Text,
   Center,
   HStack,
-  NativeBaseProvider,
   Skeleton,
   useDisclose,
   Divider,
@@ -173,70 +172,68 @@ function ListInvoiceScreen({ navigation, route }) {
         <SafeAreaView>
           <ScrollView>
             <TouchableRipple rippleColor="rgba(0, 0, 0, .32)">
-              <NativeBaseProvider>
-                <TouchableOpacity
-                  // onPress={() => navigation.navigate("Lọc thông tin hóa đơn")}
-                  style={styles.btnFilter}
-                  onPress={() => {
-                    setVisibleFilter(true);
-                  }}
-                >
-                  <View style={styles.btnFilterContent}>
-                    <Text>Lọc</Text>
-                    <IconOcticons
-                      // style={{ textAlign: "center" }}
-                      name="filter"
-                      size={25}
-                      // color="#FFF"
-                    ></IconOcticons>
-                  </View>
-                </TouchableOpacity>
+              <TouchableOpacity
+                // onPress={() => navigation.navigate("Lọc thông tin hóa đơn")}
+                style={styles.btnFilter}
+                onPress={() => {
+                  setVisibleFilter(true);
+                }}
+              >
+                <View style={styles.btnFilterContent}>
+                  <Text>Lọc</Text>
+                  <IconOcticons
+                    // style={{ textAlign: "center" }}
+                    name="filter"
+                    size={25}
+                    // color="#FFF"
+                  ></IconOcticons>
+                </View>
+              </TouchableOpacity>
 
-                {data.length > 0 ? (
-                  <>
-                    {data.map((item, index) => {
-                      return CardItem(item, index);
-                    })}
-                    {isOpen && (
-                      <ActionSheetOrder
-                        isOpen={isOpen}
-                        onClose={onClose}
-                        orderId={orderId}
-                        infoUser={infoUser}
-                        navigation={navigation}
-                      ></ActionSheetOrder>
-                    )}
-                  </>
-                ) : (
-                  <Center w="100%">
-                    {Array.from({ length: 10 }).map((_, index) => {
-                      return (
-                        <HStack
-                          key={index}
-                          w="100%"
-                          maxW="400"
-                          borderWidth="1"
-                          space={6}
-                          rounded="md"
-                          alignItems="center"
-                          _dark={{
-                            borderColor: "coolGray.500",
-                          }}
-                          _light={{
-                            borderColor: "coolGray.200",
-                          }}
-                          p={4}
-                        >
-                          <HStack flex="2" space="4">
-                            <Skeleton w="25%" />
-                            <Skeleton.Text w={"75%"} lines={2} />
-                          </HStack>
+              {data.length > 0 ? (
+                <>
+                  {data.map((item, index) => {
+                    return CardItem(item, index);
+                  })}
+                  {isOpen && (
+                    <ActionSheetOrder
+                      isOpen={isOpen}
+                      onClose={onClose}
+                      orderId={orderId}
+                      infoUser={infoUser}
+                      navigation={navigation}
+                    ></ActionSheetOrder>
+                  )}
+                </>
+              ) : (
+                <Center w="100%">
+                  {Array.from({ length: 10 }).map((_, index) => {
+                    return (
+                      <HStack
+                        key={index}
+                        w="100%"
+                        maxW="400"
+                        borderWidth="1"
+                        space={6}
+                        rounded="md"
+                        alignItems="center"
+                        _dark={{
+                          borderColor: "coolGray.500",
+                        }}
+                        _light={{
+                          borderColor: "coolGray.200",
+                        }}
+                        p={4}
+                      >
+                        <HStack flex="2" space="4">
+                          <Skeleton w="25%" />
+                          <Skeleton.Text w={"75%"} lines={2} />
                         </HStack>
-                      );
-                    })}
-                  </Center>
-                )}
-              </NativeBaseProvider>
+                      </HStack>
+                    );
+                  })}
+                </Center>
+              )}
             </TouchableRipple>
           </ScrollView>
         </SafeAreaView>

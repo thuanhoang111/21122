@@ -1,69 +1,150 @@
-import { Center, HStack, Skeleton, Text, VStack, View } from "native-base";
+import { Center, HStack, Skeleton, Text, VStack } from "native-base";
 import Header from "../../components/Header/Header";
-import { SafeAreaView } from "react-native";
-import { useEffect, useState } from "react";
-import InOutputInventoryTable from "./IOInventoryTable";
+import { Alert, SafeAreaView } from "react-native";
+import { useContext, useEffect, useState } from "react";
 import SkeletonTable from "../../components/Skeleton/SkeletonTable";
-import { InOutputInventoryData } from "../../model/data";
 import Pagination from "../../components/Pagination/Pagination";
 import { Drawer } from "react-native-drawer-layout";
 import IOInventoryFilter from "../../components/Filter/IOInventoryFilter";
-
+import IOInventoryTable from "./IOInventoryTable";
+import { MainContext } from "../MainContext";
+import * as Get from "../../API/service/Get";
+import * as Post from "../../API/service/Post";
+import { heightOfScreen, widthOfScreen } from "../../constants/ConstantMain";
 const listTitle = ["Mã hàng", "Nhập", "Xuất"];
-function InOutputInventory({ route, navigation }) {
-  const dataUser = route.params.data;
-
-  const [title, setTitle] = useState();
+const initInforSearch = {
+  UnitList: [],
+  wareHouseList: [],
+  accountList: [],
+};
+function IOInventory({ route, navigation }) {
+  const mainContext = useContext(MainContext);
+  const dataUser = mainContext.dataUser;
+  const lastPermissionYear = mainContext.lastPermissionYear;
+  const inforFilter = mainContext.inforFilter;
+  const isIos = mainContext.isIos;
   const [data, setData] = useState();
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
-  const [inforFilter, setInforFilter] = useState({
-    warehouse: "",
-    accountType: "",
-    unitType: "",
-    productionCode: "",
-    productionName: "",
-    startMonth: "",
-    endMonth: "",
-    startDay: "",
-    endDay: "",
+  const [inforSearch, setInforSearch] = useState({
+    UnitList: [],
+    wareHouseList: [],
+    accountList: [],
   });
-  const quantityItem = 10;
+  const quantityItem = 20;
+  const handleGetData = async (
+    year,
+    warehouse,
+    accountType,
+    unitType,
+    productionCode,
+    productionName,
+    startMonth,
+    endMonth,
+    startDay,
+    endDay
+  ) => {
+    await Get.HandleGetWithParam(
+      `IOInventory/IOInventory_Total`,
+      `m1=${startMonth}&m2=${endMonth}&startDay=${startDay}&endDay=${endDay}&productCode=${productionCode}&productName=${productionName}&unitCode=${unitType}&wareHouseCode=${warehouse}&kanKamokuCode=${accountType}&userId=${dataUser.id}&year=${year}`
+    )
+      .then((data) => {
+        if (data.isError || data.error) {
+          Alert.alert(data.errorMsg || "Thông báo", data.errorDescription, [
+            { text: "Ok" },
+          ]);
+          setData([]);
+        } else {
+          data && setData(data[0]);
+        }
+        year != inforFilter.year && handleGetInforSearchDT(year);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setOpen(false);
+          setPage(1);
+          mainContext.onChangeInforFilter({
+            warehouse,
+            accountType,
+            unitType,
+            productionCode,
+            productionName,
+            year,
+            startMonth,
+            endMonth,
+            startDay,
+            endDay,
+          });
+        }, 2000);
+      });
+    mainContext.onChangeLoading(false);
+  };
+  /**
+   * Function Get list Bank account
+   */
+  const handleGetInforSearchDT = async (year) => {
+    await Post.handlePostWithBody("IOInventory/FindSearch", {
+      userId: dataUser.id,
+      year: year,
+    }).then((data) => {
+      setInforSearch(initInforSearch);
+
+      if (data.isError || data.error) {
+      } else {
+        setInforSearch(data);
+      }
+      return data;
+    });
+  };
   useEffect(() => {
-    setTimeout(() => {
-      setData(InOutputInventoryData);
-      setTitle("Từ tháng 1 đến tháng 11");
-    }, 1000);
+    handleGetInforSearchDT(inforFilter.year || lastPermissionYear);
+    handleGetData(
+      inforFilter.year || lastPermissionYear,
+      "",
+      // data.accountList[1] || 152,
+      "",
+      "",
+      "",
+      "",
+      inforFilter.startMonth || 1,
+      inforFilter.endMonth || 1,
+      "",
+      ""
+    );
+    return () => {
+      mainContext.onChangeInforFilter((item) => ({
+        productionCode: undefined,
+      }));
+    };
   }, []);
   const onClick = (dataTransfer) => {
     navigation.navigate("Chi tiết vật tư hàng hóa", {
       dataTransfer: dataTransfer,
     });
   };
-  const handleGetData = (data) => {
-    console.log(data);
-  };
   return (
     <Drawer
-      swipeEdgeWidth={40}
-      swipeMinDistance={100}
-      swipeMinVelocity={1000}
+      swipeEdgeWidth={widthOfScreen * 0.5}
+      swipeMinDistance={50}
+      swipeMinVelocity={2000}
       drawerPosition="right"
       drawerType="front"
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       hideStatusBarOnOpen
+      swipeEnabled={isIos}
       renderDrawerContent={() => {
         return (
           <IOInventoryFilter
+            onSearchAgain={handleGetInforSearchDT}
             inforPermission={dataUser.permission}
-            onSearch={(data) => console.log(data)}
-            inforFilter={inforFilter}
+            onSearch={handleGetData}
+            inforSearch={inforSearch}
           />
         );
       }}
-      drawerStyle={{ backgroundColor: "#fff", width: "85%" }}
+      drawerStyle={{ backgroundColor: "#f1f1f1", width: "85%" }}
     >
       <VStack>
         <Header
@@ -73,25 +154,38 @@ function InOutputInventory({ route, navigation }) {
           onBack={() => navigation.goBack()}
         ></Header>
         <SafeAreaView>
-          <VStack>
-            <Center py={3} backgroundColor={"red"}>
-              {title ? (
-                <Text fontSize="xl" bold>
-                  {title}
+          <VStack height={heightOfScreen - 200} justifyContent={"flex-start"}>
+            <VStack alignItems={"center"} py={3}>
+              {inforFilter.startMonth || inforFilter.startDay ? (
+                <Text
+                  fontSize="lg"
+                  fontWeight={600}
+                  px={2}
+                  textAlign={"center"}
+                  width={"80%"}
+                >
+                  {inforFilter.startMonth != 0
+                    ? inforFilter.startMonth == inforFilter.endMonth
+                      ? `Trong tháng ${inforFilter.startMonth}`
+                      : `Từ tháng ${inforFilter.startMonth} đến tháng ${inforFilter.endMonth}`
+                    : inforFilter.startDay === inforFilter.endDay
+                    ? `Trong ngày ${inforFilter.startDay}`
+                    : `Từ ngày ${inforFilter.startDay} đến ngày ${inforFilter.endDay}`}
                 </Text>
               ) : (
                 <Skeleton.Text width={"70%"} lines={1}></Skeleton.Text>
               )}
-            </Center>
+            </VStack>
             {data ? (
-              <InOutputInventoryTable
+              <IOInventoryTable
                 data={data.slice(
                   (page - 1) * quantityItem,
                   page * quantityItem
                 )}
                 fields={listTitle}
-                onclick={onClick}
-              ></InOutputInventoryTable>
+                onClick={onClick}
+                page={page}
+              ></IOInventoryTable>
             ) : (
               <>
                 <Center
@@ -118,6 +212,7 @@ function InOutputInventory({ route, navigation }) {
                 alignItems={"center"}
                 justifyContent={"flex-end"}
                 paddingX={3}
+                flex={1}
               >
                 <Pagination
                   callBack={setPage}
@@ -134,4 +229,4 @@ function InOutputInventory({ route, navigation }) {
   );
 }
 
-export default InOutputInventory;
+export default IOInventory;

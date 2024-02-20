@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import { View, StyleSheet, Alert } from "react-native";
 import ChartYear from "../../components/ChartYear/ChartYear";
-import axios from "axios";
-import { Avatar, Center, Divider, HStack, Skeleton } from "native-base";
+import * as Get from "../../API/service/Get";
+import { Center, Divider, HStack, Skeleton } from "native-base";
 import RevenueAnalysisTable from "./RevenueAnalysisTable";
+import { MainContext } from "../MainContext";
+import Header from "../../components/Header/Header";
 
 const RevenueAnalysis = ({ route, navigation }) => {
+  const mainContext = useContext(MainContext);
   const [costAnalysisDetails, setCostAnalysisDetails] = useState();
   const [totalPriceOfEachYear, setTotalPriceOfEachYear] = useState();
-  const dataUser = route.params.data;
-  const lastPermissionYear =
-    dataUser.permission[dataUser.permission.length - 1].year;
+  const dataUser = mainContext.dataUser;
+  const inforFilter = mainContext.inforFilter;
+  const lastPermissionYear = mainContext.lastPermissionYear;
   const handleCalcPriceOfEachYear = (data) => {
     const inforPriceOfEachYear = [];
     data.forEach((item) => {
@@ -23,120 +26,140 @@ const RevenueAnalysis = ({ route, navigation }) => {
     });
     setTotalPriceOfEachYear(inforPriceOfEachYear);
   };
-  const handleGetData = () => {
-    axios
-      .get(
-        `http://192.168.90.84:1375/api/CostAnalysis/YearReport?radyear=2&reportType=0&userId=${dataUser.id}&year=${lastPermissionYear}`
-      )
-      .then((res) => {
-        return res.data;
-      })
+  const handleGetData = (year) => {
+    Get.HandleGetWithParam(
+      `CostAnalysis/YearReport`,
+      `radyear=2&reportType=0&userId=${dataUser.id}&year=${year}`
+    )
       .then((data) => {
-        setCostAnalysisDetails(data);
-        handleCalcPriceOfEachYear(data);
+        if (data.isError || data.error) {
+          Alert.alert("Thông báo", data.errorDescription, [{ text: "Ok" }]);
+          setCostAnalysisDetails([]);
+          setTotalPriceOfEachYear([{ year: year, value: 0 }]);
+        } else {
+          setCostAnalysisDetails(data[0].BusinessReportDetails);
+          handleCalcPriceOfEachYear(data);
+        }
       })
-      .catch((error) => console.log(error));
+      .finally(() => {
+        mainContext.onChangeInforFilter({
+          year,
+        });
+        mainContext.onChangeLoading(false);
+      });
   };
   useEffect(() => {
-    handleGetData();
+    handleGetData(inforFilter.year || lastPermissionYear);
   }, []);
   return (
-    <View style={styles.container}>
-      {costAnalysisDetails ? (
-        <>
-          {totalPriceOfEachYear && (
-            <ChartYear data={totalPriceOfEachYear}></ChartYear>
-          )}
-          <View style={{ marginTop: 50 }}>
+    <>
+      <Header
+        onBack={() => navigation.goBack()}
+        title={"Phân tích kinh doanh"}
+      ></Header>
+      <View style={styles.container}>
+        {costAnalysisDetails ? (
+          <>
+            {totalPriceOfEachYear && (
+              <ChartYear data={totalPriceOfEachYear}></ChartYear>
+            )}
             <RevenueAnalysisTable
-              tableName={`Năm ${lastPermissionYear}`}
-              data={costAnalysisDetails[0].BusinessReportDetails}
+              year={inforFilter.year || lastPermissionYear}
+              data={costAnalysisDetails}
+              // showDetail={(data) =>
+              //   navigation.navigate("Chi tiết phân tích chi phí", {
+              //     data: data,
+              //     title: "Chi tiết doanh thu",
+              //     reportType: 0,
+              //   })
+              // }
+              onChangeYear={handleGetData}
             ></RevenueAnalysisTable>
-          </View>
-        </>
-      ) : (
-        <Center
-          w="100%"
-          style={{
-            borderRadius: 25,
-            zIndex: 100,
-          }}
-        >
-          <HStack
-            w="40%"
-            space={4}
-            marginBottom={100}
-            justifyContent={"center"}
-            alignItems={"flex-end"}
-          >
-            <Skeleton flex="1" h="200" rounded="md" />
-            <Skeleton flex="1" h="130" rounded="md" />
-            <Divider
-              style={{
-                width: 200,
-                height: 3,
-                position: "absolute",
-                bottom: 0,
-                zIndex: 1000,
-                backgroundColor: "#b8c0c2",
-              }}
-            ></Divider>
-          </HStack>
-          <View
+          </>
+        ) : (
+          <Center
+            w="100%"
             style={{
               borderRadius: 25,
-              borderWidth: 0.5,
-              borderColor: "#d2d0d1",
-              width: "98%",
+              zIndex: 100,
             }}
           >
             <HStack
-              space={10}
-              rounded="3xl"
-              alignItems="center"
-              p={3}
+              w="40%"
+              space={4}
+              marginBottom={100}
+              justifyContent={"center"}
+              alignItems={"flex-end"}
+            >
+              <Skeleton flex="1" h="200" rounded="md" />
+              <Skeleton flex="1" h="130" rounded="md" />
+              <Divider
+                style={{
+                  width: 200,
+                  height: 3,
+                  position: "absolute",
+                  bottom: 0,
+                  zIndex: 1000,
+                  backgroundColor: "#b8c0c2",
+                }}
+              ></Divider>
+            </HStack>
+            <View
               style={{
-                backgroundColor: "#b8c0c2",
-                borderBottomRightRadius: 0,
-                borderBottomLeftRadius: 0,
+                borderRadius: 25,
+                borderWidth: 0.5,
+                borderColor: "#d2d0d1",
+                width: "98%",
               }}
             >
-              <HStack flex="2" space="8">
-                <Skeleton.Text w={"100%"} lines={1} />
+              <HStack
+                space={10}
+                rounded="3xl"
+                alignItems="center"
+                p={3}
+                style={{
+                  backgroundColor: "#b8c0c2",
+                  borderBottomRightRadius: 0,
+                  borderBottomLeftRadius: 0,
+                }}
+              >
+                <HStack flex="2" space="8">
+                  <Skeleton.Text w={"100%"} lines={1} />
+                </HStack>
               </HStack>
-            </HStack>
-            <HStack
-              w={"100%"}
-              maxW="400"
-              rounded={"3xl"}
-              marginTop={1}
-              alignItems="center"
-              p={4}
-            >
-              <HStack flex="2" space="6">
-                <Skeleton w={"100%"} h={40} lines={1} />
+              <HStack
+                w={"100%"}
+                maxW="400"
+                rounded={"3xl"}
+                marginTop={1}
+                alignItems="center"
+                p={4}
+              >
+                <HStack flex="2" space="6">
+                  <Skeleton w={"100%"} h={40} lines={1} />
+                </HStack>
               </HStack>
-            </HStack>
-            <HStack
-              space={10}
-              rounded={"3xl"}
-              marginTop={1}
-              alignItems="center"
-              style={{
-                backgroundColor: "#b8c0c2",
-                borderTopRightRadius: 0,
-                borderTopLeftRadius: 0,
-              }}
-              p={3}
-            >
-              <HStack flex="2" space="6">
-                <Skeleton.Text w={"100%"} lines={1} />
+              <HStack
+                space={10}
+                rounded={"3xl"}
+                marginTop={1}
+                alignItems="center"
+                style={{
+                  backgroundColor: "#b8c0c2",
+                  borderTopRightRadius: 0,
+                  borderTopLeftRadius: 0,
+                }}
+                p={3}
+              >
+                <HStack flex="2" space="6">
+                  <Skeleton.Text w={"100%"} lines={1} />
+                </HStack>
               </HStack>
-            </HStack>
-          </View>
-        </Center>
-      )}
-    </View>
+            </View>
+          </Center>
+        )}
+      </View>
+    </>
   );
 };
 
@@ -145,7 +168,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5FCFF",
   },
   tooltipContainer: {
     position: "absolute",

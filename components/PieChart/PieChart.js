@@ -1,8 +1,8 @@
-import { Center, View, Text, HStack, VStack, Skeleton } from "native-base";
+import { View, Text, HStack, VStack, Skeleton } from "native-base";
 import { heightOfScreen, widthOfScreen } from "../../constants/ConstantMain";
 import { VictoryContainer, VictoryPie } from "victory-native";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { memo } from "react";
+import NoData from "../NoData/NoData";
 function PieChart({
   dataChart,
   setDataChart,
@@ -64,11 +64,15 @@ function PieChart({
               containerComponent={<VictoryContainer responsive={false} />}
               width={widthOfScreen * 0.9}
               height={heightOfScreen * 0.35}
-              labelRadius={({ innerRadius }) => innerRadius + 30}
+              labelRadius={({ _, index, datum }) => {
+                return datum._y > 20 ? 30 : (index + 0.5) * 20;
+              }}
               colorScale={listColor}
               data={dataChart}
-              x={(a) => (a.money != 0 ? (a.active ? a.money : a.x) : " ")}
-              radius={({ datum }) => (datum.active == true ? datum.y + 60 : 90)}
+              x={(a) => {
+                return a.money != "0 đ" ? (a.active ? a.money : a.x) : " ";
+              }}
+              radius={({ datum }) => (datum.active == true ? 100 : 90)}
               events={[
                 {
                   target: "data",
@@ -98,10 +102,8 @@ function PieChart({
               alignItems={"center"}
               justifyContent={"center"}
               opacity={0.5}
-              paddingTop={10}
             >
-              <MaterialCommunityIcons size={100} name="database-off-outline" />
-              <Text fontSize={"md"}>Không có dữ liệu </Text>
+              <NoData />
             </VStack>
           )
         ) : (

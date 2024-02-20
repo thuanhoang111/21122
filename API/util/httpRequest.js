@@ -4,6 +4,7 @@ import axios from "axios";
 const request = axios.create({
   baseURL: "http://waca.vn:82/api/",
   // baseURL: "http://192.168.90.84:1375/api/",
+  // baseURL: "http://192.168.90.88:8090/api/",
 });
 //
 /**
@@ -12,19 +13,16 @@ const request = axios.create({
  * @returns response
  */
 export const get = async (path, config) => {
+  console.log(path);
   const response = await request.get(path, config);
   return response.data;
 };
-/**
- * initialization function post with path and body
- * @param { String } path:url of request e.g : /api/User?userID=???&password=???
- * @param { Object } body:infor of request e.g :{name:"ThuanHoang",age:"21"}
- * @returns response
- */
-export const post = async (path, body) => {
-  const response = await request.post(path, body);
-  return response.data;
-};
+// /**
+//  * initialization function post with path and body
+//  * @param { String } path:url of request e.g : /api/User?userID=???&password=???
+//  * @param { Object } body:infor of request e.g :{name:"ThuanHoang",age:"21"}
+//  * @returns response
+//  */
 /**
  *
  * @param {String} path:url of request e.g : /api/User
@@ -33,17 +31,8 @@ export const post = async (path, body) => {
 }
  * @returns response
  */
-export const postWithHeader = async (path, body, header) => {
+export const post = async (path, body, header) => {
   const response = await request.post(path, body, header);
-  return response.data;
-};
-/**
- *
- * @param {String } path :url of request include information of parameter ,e.g:/api/User?userID=???&password=???
- * @returns
- */
-export const postWithParam = async (path) => {
-  const response = await request.post(path);
   return response.data;
 };
 export default request;

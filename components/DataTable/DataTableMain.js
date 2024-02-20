@@ -2,16 +2,7 @@ import { DataTable, Divider, Text } from "react-native-paper";
 import { useEffect, useState } from "react";
 import { Platform, StyleSheet } from "react-native";
 import * as constantMain from "../../constants/ConstantMain";
-import {
-  Center,
-  NativeBaseProvider,
-  VStack,
-  Heading,
-  ScrollView,
-  HStack,
-  Skeleton,
-  View,
-} from "native-base";
+import { ScrollView, View } from "native-base";
 import { financialReportName } from "./../../model/data";
 const optionsPerPage = [2, 3, 4];
 function DataTableMain({ data, fields, isPagination, isDetailDiagram }) {

@@ -1,18 +1,10 @@
 import { Animated, StyleSheet, View } from "react-native";
 import * as Animatable from "react-native-animatable";
-import {
-  currentYear,
-  heightOfScreen,
-  widthOfScreen,
-} from "../../constants/ConstantMain";
-import {
-  Column,
-  HStack,
-  NativeBaseProvider,
-  VStack,
-  Divider,
-} from "native-base";
+import { widthOfScreen } from "../../constants/ConstantMain";
+import { HStack, VStack, Divider } from "native-base";
 import { Text } from "react-native";
+import { formatMoneyToVN } from "../../constants/ConstantFunc";
+import { currentTimeColor, primaryColor } from "../../constants/ConstantStyle";
 
 /**
  * Author:ThuanHoang 20/06/2023
@@ -26,7 +18,6 @@ function ChartYear({ data }) {
   });
 
   let value_Cal = max_val.value == 0 ? 0 : 200 / max_val.value;
-  console.log(value_Cal);
   const fadeIn = (maxHeight) => {
     return {
       from: {
@@ -38,56 +29,60 @@ function ChartYear({ data }) {
     };
   };
   return (
-    <View style={styles.boxChart}>
-      <HStack alignItems={"flex-end"} justifyContent={"center"} h={200}>
-        {data.map((item, index) => {
-          return (
-            <VStack key={index}>
-              <Text style={{ textAlign: "center" }}>
-                {item.value.toLocaleString("vi-VN", {
-                  maximumFractionDigits: 6,
-                  style: "currency",
-                  currency: "VND",
-                })}
-              </Text>
-              <Animatable.View
-                animation={fadeIn(item.value * value_Cal)}
-                duration={2000}
-                style={[
-                  styles.columnView,
-                  {
-                    width: widthOfScreen * 0.2,
-                    backgroundColor:
-                      index === data.length - 1 ? "#F25F33" : "#009087",
-                  },
-                ]}
-              ></Animatable.View>
-              <Text
-                style={{ textAlign: "center", position: "relative", bottom: 0 }}
-              >
-                {item.year}
-              </Text>
-            </VStack>
-          );
-        })}
-        <Divider
-          style={{
-            width: widthOfScreen * data.length * 0.3,
-            height: 3,
-            position: "absolute",
-            bottom: 16,
-            backgroundColor: "#009087",
-          }}
-        ></Divider>
-      </HStack>
-    </View>
+    <HStack
+      alignItems={"flex-end"}
+      justifyContent={"center"}
+      minHeight={250}
+      flex={1}
+    >
+      {data.map((item, index) => {
+        return (
+          <VStack key={index} alignItems={"center"}>
+            <Text style={{ textAlign: "center", paddingBottom: 5 }}>
+              {formatMoneyToVN(item.value, "đ")}
+            </Text>
+            <Animatable.View
+              animation={fadeIn(item.value * value_Cal)}
+              duration={2000}
+              style={[
+                styles.columnView,
+                {
+                  width: widthOfScreen * 0.2,
+                  backgroundColor:
+                    index === data.length - 1 ? currentTimeColor : primaryColor,
+                },
+              ]}
+            ></Animatable.View>
+            <Text
+              style={{
+                textAlign: "center",
+                position: "relative",
+                bottom: 0,
+                height: 20,
+              }}
+            >
+              {item.year}
+            </Text>
+          </VStack>
+        );
+      })}
+      <Divider
+        style={{
+          width: "80%",
+          height: 3,
+          position: "absolute",
+          bottom: 20,
+          backgroundColor: primaryColor,
+        }}
+      ></Divider>
+    </HStack>
   );
 }
 const styles = StyleSheet.create({
   listColumn: {
     borderBottomWidth: 2,
     paddingHorizontal: 20,
-    borderBottomColor: "#009087",
+    borderBottomColor: primaryColor,
   },
   columnView: {
     marginRight: 10,

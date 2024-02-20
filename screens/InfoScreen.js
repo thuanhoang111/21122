@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { View, StyleSheet, SafeAreaView, Dimensions, Text } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 
 import {
   Avatar,
-  NativeBaseProvider,
   HStack,
   VStack,
   Skeleton,
@@ -13,84 +11,49 @@ import {
   ScrollView,
   Divider,
   Button,
-  Icon,
 } from "native-base";
-import { AuthContext } from "../components/context";
-import { StoreInfoUser } from "../constants/API";
 import { List } from "react-native-paper";
-import moment from "moment";
 import MaskedView from "@react-native-masked-view/masked-view";
+import { InforUserContext } from "./InforAccount/InforUserContext";
+import { AuthContext } from "../components/context";
+import Header from "../components/Header/Header";
 
 const InfoScreen = ({ navigation }) => {
-  const { signOut } = React.useContext(AuthContext);
-
-  const initialInfoUser = {
-    uni_k_code: Number,
-    userID: "",
-    userName: "",
-    startDay: "",
-    endDay: "",
-    label: "",
-  };
-  const [infoUser, setInfoUser] = useState(initialInfoUser);
-
-  const getUserID = async () => {
-    try {
-      const infoUserGet = await AsyncStorage.getItem(StoreInfoUser);
-      let jsonUser = JSON.parse(infoUserGet);
-      setInfoUser({
-        ...infoUser,
-        uni_k_code: jsonUser.UserInfo.uni_k_code,
-        userID: jsonUser.UserInfo.id,
-        userName: jsonUser.UserInfo.name,
-        startDay: moment(jsonUser.UserInfo.registtime).format("DD/MM/yyyy"),
-        endDay: moment(jsonUser.UserInfo.endtime).format("DD/MM/yyyy"),
-        label: jsonUser.UserInfo.type,
-        address: jsonUser.KanriInfo.Table[0].adres1,
-        province: jsonUser.BranchInfo.Table[0].name,
-        cooperativeName: jsonUser.KanriInfo.Table[0].name,
-      });
-    } catch (error) {}
-  };
-
-  useEffect(() => {
-    getUserID();
-  }, []);
+  const context = useContext(InforUserContext);
+  const { signOut } = useContext(AuthContext);
 
   const handleShowPosition = (idPosition) => {
     switch (idPosition) {
       case 4:
         return "Kế Toán";
-        break;
       case 7:
         return "Giám đốc";
-        break;
       default:
         return "Chưa có chức vụ ";
-        break;
     }
   };
   return (
-    <NativeBaseProvider>
+    <>
+      <Header title={"Thông tin chính"}></Header>
       <SafeAreaView style={styles.safeContainer}>
         <ScrollView>
           <View style={styles.body}>
             <View style={styles.imageUser}>
-              {infoUser.userID ? (
+              {context.inforUser.userID ? (
                 <>
                   <HStack justifyContent="center" space={2}>
                     <Avatar
                       bg="#fff"
                       size="2xl"
                       source={{
-                        uri: "https://firebasestorage.googleapis.com/v0/b/appchatzala.appspot.com/o/Screenshot%202023-06-08%20094702.png?alt=media&token=f2dbd21f-8643-4505-a335-f69d964d38ce&_gl=1*fkiao5*_ga*MTc2MTM4NjIuMTY3NTkxODU2NA..*_ga_CW55HF8NVT*MTY4NjE5MjMyNC4xMy4xLjE2ODYxOTI0NDMuMC4wLjA.",
+                        uri: "https://firebasestorage.googleapis.com/v0/b/waca-4c0b4.appspot.com/o/icon.png?alt=media&token=ff1120d2-5a12-4ab4-87ad-7528bfff5f69",
                       }}
                     >
-                      {infoUser.userName}
+                      {context.inforUser.userName}
                     </Avatar>
                   </HStack>
 
-                  <View style={styles.infoUser}>
+                  <View style={styles.inforUser}>
                     <MaskedView
                       style={{ height: 24 }}
                       maskElement={
@@ -103,7 +66,7 @@ const InfoScreen = ({ navigation }) => {
                             color: "#fff",
                           }}
                         >
-                          {infoUser.userName}
+                          {context.inforUser.userName}
                         </Text>
                       }
                     >
@@ -119,7 +82,7 @@ const InfoScreen = ({ navigation }) => {
                         fontWeight: 300,
                       }}
                     >
-                      {handleShowPosition(infoUser.label)}
+                      {handleShowPosition(context.inforUser.label)}
                     </Text>
                   </View>
 
@@ -134,9 +97,7 @@ const InfoScreen = ({ navigation }) => {
                       right={(props) => (
                         <List.Icon {...props} icon="chevron-right"></List.Icon>
                       )}
-                      onPress={() =>
-                        navigation.navigate("Thông tin tài khoản", infoUser)
-                      }
+                      onPress={() => navigation.navigate("Thông tin tài khoản")}
                     ></List.Accordion>
                     <Divider></Divider>
                     <List.Accordion
@@ -168,7 +129,7 @@ const InfoScreen = ({ navigation }) => {
                       width={"85%"}
                       margin={"auto"}
                       borderRadius={20}
-                      onPress={() => signOut(infoUser.userID)}
+                      onPress={() => signOut(context.inforUser.userID)}
                       // leftIcon={
                       //   <IconMaterialCommunity
                       //     name="logout"
@@ -224,32 +185,13 @@ const InfoScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </NativeBaseProvider>
+    </>
   );
 };
 
 export default InfoScreen;
 
-const width = Dimensions.get("window").width - 20;
 const styles = StyleSheet.create({
-  header: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "auto",
-    height: 64,
-    backgroundColor: "#fff",
-  },
-  headerName: {
-    margin: "auto",
-    padding: "auto",
-    fontSize: 20,
-    fontWeight: 600,
-  },
-  infoUser: {
-    paddingTop: 10,
-  },
   safeContainer: {
     backgroundColor: "#eaeae9",
   },
@@ -257,114 +199,6 @@ const styles = StyleSheet.create({
     position: "relative",
     minHeight: Dimensions.get("window").height,
   },
-  block_1: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    margin: 10,
-    paddingLeft: 10,
-    paddingRight: 10,
-    backgroundColor: "#309ee7",
-    borderRadius: 10,
-  },
-  account_name: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    backgroundColor: "white",
-    margin: 10,
-    borderRadius: 40,
-    borderWidth: 2,
-    borderColor: "#309ee7",
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatar_info: {},
-  avatar_name: {
-    fontSize: 24,
-    color: "white",
-  },
-  block_2: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    margin: 10,
-    marginTop: 3,
-    paddingLeft: 10,
-    paddingRight: 10,
-    backgroundColor: "white",
-    borderRadius: 7,
-    borderLeftWidth: 3,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-    borderBottomWidth: 3,
-    borderColor: "#309ee7",
-  },
-  block_2_item: {
-    width: width - 20,
-    padding: 20,
-    paddingLeft: 10,
-    paddingRight: 10,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  block_2_title: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "center",
-  },
-  block_2_icon: {
-    fontSize: 28,
-  },
-  block_logout_item: {
-    padding: 20,
-    paddingLeft: 10,
-    paddingRight: 10,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  block_logout: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    width: width - 220,
-    marginLeft: width - 120,
-    paddingTop: 40,
-    borderRadius: 10,
-  },
-
-  gradient: {
-    // flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 5,
-    height: 40,
-  },
-  button: {
-    width: "70%",
-  },
-  text_Logout: {
-    color: "white",
-    fontSize: 20,
-    justifyContent: "center",
-    paddingBottom: 5,
-  },
-  inforUser: {},
   imageUser: {
     marginTop: 20,
   },

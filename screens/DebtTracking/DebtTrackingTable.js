@@ -3,67 +3,65 @@ import {
   Divider,
   HStack,
   Heading,
-  ScrollView,
   VStack,
   Text,
   Pressable,
 } from "native-base";
-import { StyleSheet } from "react-native";
+import { StyleSheet, VirtualizedList } from "react-native";
 import * as constantMain from "../../constants/ConstantMain";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Feather from "react-native-vector-icons/Feather";
-import IconAntDesign from "react-native-vector-icons/AntDesign";
 import {
-  compactMoney,
-  formatMoney,
+  compactMoneyToString,
   formatMoneyToVN,
 } from "./../../constants/ConstantFunc";
-const widthOfTable = constantMain.widthOfScreen * 0.95;
-function DebtTrackingTable({ data = [], fields }) {
+import { memo, useEffect } from "react";
+import NoData from "../../components/NoData/NoData";
+function DebtTrackingTable({
+  data = [],
+  fields,
+  onClick,
+  page,
+  totalData = {},
+}) {
+  useEffect(() => {
+    data.length > 1 &&
+      this.DebtTrackingRef.scrollToOffset({ animated: true, offset: 0 });
+  }, [page]);
+
+  const listWidth = ["24%", "25%", "25%", "23%"];
   return (
-    <Center style={styles.table}>
+    <Center style={styles.table} flex={15}>
       <HStack
         style={styles.tableHeader}
         justifyContent={"flex-start"}
         w={"100%"}
+        paddingY={2}
+        paddingLeft={2}
       >
         {fields.map((item, index) => {
           return (
-            <Pressable py={2} key={index}>
-              <Heading
-                size={"xs"}
-                textAlign={"center"}
-                key={index}
-                style={
-                  (styles.titleHeader,
-                  {
-                    width: widthOfTable / fields.length - 5,
-                  })
-                }
-              >
+            <Pressable py={2} key={index} width={listWidth[index]}>
+              <Heading size={"xs"} textAlign={"left"} key={index}>
                 {item}
-                {item === "Ngày" && <IconAntDesign size={10} />}
               </Heading>
             </Pressable>
           );
         })}
       </HStack>
-
-      <VStack style={styles.tableContent}>
-        <ScrollView
-          style={styles.tableContentScrollView}
-          nestedScrollEnabled={true}
-        >
-          {data.length != 0 ? (
-            data.map((item, index) => {
+      <VStack style={styles.tableContent} flex={15}>
+        {data.length > 1 ? (
+          <VirtualizedList
+            ref={(ref) => {
+              this.DebtTrackingRef = ref;
+            }}
+            initialNumToRender={10}
+            renderItem={({ item, index }) => {
               return (
-                <Pressable key={index}>
+                <Pressable key={index} onPress={() => onClick(item)}>
                   {({ isHovered, isFocused, isPressed }) => {
                     return (
                       <>
                         <HStack
-                          paddingLeft={0.5}
+                          paddingLeft={2}
                           style={styles.boxItemContent}
                           alignItems={"center"}
                           space={"0.5"}
@@ -77,49 +75,49 @@ function DebtTrackingTable({ data = [], fields }) {
                         >
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "24%" }]}
+                            style={[{ width: listWidth[0] }]}
                           >
                             <Text fontSize={"2xs"} bold>
-                              {item.customerId}
+                              {item.CusId}
                             </Text>
-                            <Text fontSize={8}>{item.customerName}</Text>
+                            <Text fontSize={8}>{item.CusName}</Text>
                           </VStack>
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "25%" }]}
+                            style={[{ width: listWidth[1] }]}
                           >
                             <Text fontSize={"2xs"} bold>
-                              {compactMoney(item.ostBalanceIPeriod)}
+                              {compactMoneyToString(item.DebtBalanceIPeriod)}
                             </Text>
                             <Text fontSize={"2xs"}>
-                              {formatMoneyToVN(item.validBalanceBPeriod)}
+                              {formatMoneyToVN(item.ValidBalanceBPeriod, "đ")}
                             </Text>
                           </VStack>
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "25%" }]}
+                            style={[{ width: listWidth[2] }]}
                           >
                             <Text fontSize={"2xs"} bold>
-                              {compactMoney(item.ostBalanceDPeriod)}
+                              {compactMoneyToString(item.DebtBalanceDPeriod)}
                             </Text>
                             <HStack
                               alignItems={"center"}
                               justifyContent={"space-between"}
                             >
                               <Text fontSize={"2xs"}>
-                                {formatMoneyToVN(item.validBalanceDPeriod)}
+                                {formatMoneyToVN(item.ValidBalanceDPeriod, "đ")}
                               </Text>
                             </HStack>
                           </VStack>
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "25%" }]}
+                            style={[{ width: listWidth[3] }]}
                           >
                             <Text fontSize={"2xs"} bold>
-                              {compactMoney(item.ostBalanceEPeriod)}
+                              {compactMoneyToString(item.DebtBalanceEPeriod)}
                             </Text>
                             <Text fontSize={"2xs"}>
-                              {formatMoneyToVN(item.validBalanceEPeriod)}
+                              {formatMoneyToVN(item.ValidBalanceEPeriod, "đ")}
                             </Text>
                           </VStack>
                         </HStack>
@@ -129,36 +127,77 @@ function DebtTrackingTable({ data = [], fields }) {
                   }}
                 </Pressable>
               );
-            })
-          ) : (
-            <VStack
-              space="5"
-              alignItems={"center"}
-              justifyContent={"center"}
-              opacity={0.5}
-              paddingTop={10}
-            >
-              <MaterialCommunityIcons size={150} name="database-off-outline" />
-              <Text fontSize={"lg"}>Không có dữ liệu </Text>
-            </VStack>
-          )}
-        </ScrollView>
+            }}
+            keyExtractor={(item, index) => index}
+            getItemCount={(_data) => data.length - 1}
+            getItem={(data, index) => {
+              return data[index];
+            }}
+            data={data}
+          />
+        ) : (
+          <NoData fontSizeText="lg" />
+        )}
       </VStack>
+      <HStack
+        style={styles.tableBottom}
+        justifyContent={"flex-start"}
+        w={"100%"}
+      >
+        <HStack
+          paddingLeft={2}
+          style={styles.boxItemContent}
+          alignItems={"center"}
+          space={"0.5"}
+        >
+          <VStack alignItems={"flex-start"} style={[{ width: listWidth[0] }]}>
+            <Text fontSize={"xs"} bold>
+              {totalData.CusId || "---"}
+            </Text>
+            <Text fontSize={8}>{totalData.CusName || "---"}</Text>
+          </VStack>
+          <VStack alignItems={"flex-start"} style={[{ width: listWidth[1] }]}>
+            <Text fontSize={"xs"} bold>
+              {compactMoneyToString(totalData.DebtBalanceIPeriod)}
+            </Text>
+            <Text fontSize={"2xs"}>
+              {compactMoneyToString(totalData.ValidBalanceBPeriod)}
+            </Text>
+          </VStack>
+          <VStack alignItems={"flex-start"} style={[{ width: listWidth[2] }]}>
+            <Text fontSize={"xs"} bold>
+              {compactMoneyToString(totalData.DebtBalanceDPeriod)}
+            </Text>
+            <HStack alignItems={"flex-start"} justifyContent={"space-between"}>
+              <Text fontSize={"2xs"}>
+                {compactMoneyToString(totalData.ValidBalanceDPeriod)}
+              </Text>
+            </HStack>
+          </VStack>
+          <VStack alignItems={"flex-start"} style={[{ width: listWidth[3] }]}>
+            <Text fontSize={"xs"} bold>
+              {compactMoneyToString(totalData.DebtBalanceEPeriod)}
+            </Text>
+            <Text fontSize={"2xs"}>
+              {compactMoneyToString(totalData.ValidBalanceEPeriod)}
+            </Text>
+          </VStack>
+        </HStack>
+      </HStack>
     </Center>
   );
 }
-export default DebtTrackingTable;
+export default memo(DebtTrackingTable);
 const styles = StyleSheet.create({
   table: {
     marginHorizontal: constantMain.widthOfScreen * 0.025,
-    marginTop: 10,
     elevation: 5,
     shadowColor: "#52006A",
     backgroundColor: "#fff",
     borderRadius: 20,
     fontSize: 8,
     overflow: "hidden",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   tableHeader: {
     backgroundColor: "#D9D9D9",
@@ -167,40 +206,16 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
   },
-  titleHeader: {
-    fontSize: 16,
-    fontWeight: 600,
-    color: "#000",
-  },
-  totalPrice: {
-    fontSize: 17,
-    fontWeight: 800,
+  tableBottom: {
+    backgroundColor: "#D9D9D9",
+    display: "flex",
+    flexDirection: "row",
   },
   tableContent: {
     marginTop: 10,
-    maxHeight:
-      Platform.OS === "ios"
-        ? constantMain.heightOfScreen * 0.58
-        : constantMain.heightOfScreen * 0.6,
+    minHeight: "50%",
   },
-  tableContentScrollView: {
-    paddingLeft: 10,
-  },
-
   boxItemContent: {
     paddingVertical: 10,
-  },
-  textTotalItemContent: {
-    fontSize: 16,
-    fontWeight: 700,
-  },
-  boxTotalContent: {
-    alignContent: "center",
-    backgroundColor: "#dddddc",
-    paddingLeft: 10,
-    paddingVertical: 10,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 });

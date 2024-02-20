@@ -11,13 +11,30 @@ import {
 import { StyleSheet } from "react-native";
 import * as constantMain from "../../constants/ConstantMain";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+
 import Feather from "react-native-vector-icons/Feather";
 import IconAntDesign from "react-native-vector-icons/AntDesign";
+import { useEffect } from "react";
+import NoData from "../../components/NoData/NoData";
+import { formatMoneyToVN } from "../../constants/ConstantFunc";
 const widthOfTable = constantMain.widthOfScreen * 0.95;
-function CashBookMoneyTable({ data, fields, inverseDate, setInverseDate }) {
+const listWidth = ["21%", "23%", "23%", "30%"];
+function CashBookMoneyTable({
+  data,
+  fields,
+  inverseDate,
+  setInverseDate,
+  page,
+}) {
+  useEffect(() => {
+    this.CashBookMoneyRef &&
+      this.CashBookMoneyRef.scrollTo({
+        y: 0,
+        animated: true,
+      });
+  }, [page]);
   return (
-    <Center style={styles.table}>
+    <Center style={styles.table} flex={15}>
       <HStack
         style={styles.tableHeader}
         justifyContent={"flex-start"}
@@ -27,21 +44,14 @@ function CashBookMoneyTable({ data, fields, inverseDate, setInverseDate }) {
           return (
             <Pressable
               py={2}
+              paddingLeft={1}
               key={index}
+              width={listWidth[index]}
               onPressIn={() => {
                 item === "Ngày" && setInverseDate(!inverseDate);
               }}
             >
-              <Heading
-                size={"sm"}
-                key={index}
-                style={
-                  (styles.titleHeader,
-                  {
-                    width: widthOfTable / fields.length - 10,
-                  })
-                }
-              >
+              <Heading size={"sm"} key={index} style={styles.titleHeader}>
                 {item}
                 {item === "Ngày" && (
                   <IconAntDesign
@@ -54,14 +64,15 @@ function CashBookMoneyTable({ data, fields, inverseDate, setInverseDate }) {
           );
         })}
       </HStack>
-
-      <VStack style={styles.tableContent}>
-        <ScrollView
-          style={styles.tableContentScrollView}
-          nestedScrollEnabled={true}
-        >
-          {data.length != 0 ? (
-            data.map((item, index) => {
+      <VStack flex={15}>
+        {data.length != 0 ? (
+          <ScrollView
+            ref={(ref) => {
+              this.CashBookMoneyRef = ref;
+            }}
+            style={styles.tableContentScrollView}
+          >
+            {data.map((item, index) => {
               return (
                 <Pressable key={index}>
                   {({ isHovered, isFocused, isPressed }) => {
@@ -80,27 +91,30 @@ function CashBookMoneyTable({ data, fields, inverseDate, setInverseDate }) {
                               : "white"
                           }
                         >
-                          <Text fontSize={"2xs"} style={[{ width: "21%" }]}>
+                          <Text
+                            fontSize={"2xs"}
+                            style={[{ width: listWidth[0] }]}
+                          >
                             {item.DateTime}
                           </Text>
-                          <Text fontSize={"2xs"} style={[{ width: "23%" }]}>
-                            {item.Revenue.toLocaleString("vi-VN", {
-                              style: "currency",
-                              currency: "VND",
-                            })}
+                          <Text
+                            fontSize={"2xs"}
+                            style={[{ width: listWidth[1] }]}
+                          >
+                            {formatMoneyToVN(item.Revenue, "đ")}
                           </Text>
-                          <Text fontSize={"2xs"} style={[{ width: "23%" }]}>
-                            {item.Expenditure.toLocaleString("vi-VN", {
-                              style: "currency",
-                              currency: "VND",
-                            })}
+                          <Text
+                            fontSize={"2xs"}
+                            style={[{ width: listWidth[2] }]}
+                          >
+                            {formatMoneyToVN(item.Expenditure, "đ")}
                           </Text>
-                          <HStack alignItems={"center"}>
+                          <HStack alignItems={"center"} width={listWidth[3]}>
                             <Text fontSize={"2xs"}>
-                              {item.Balance.toLocaleString("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                              })}
+                              {formatMoneyToVN(
+                                item.Balance - item.SpentTax + item.IncomeTax,
+                                "đ"
+                              )}
                             </Text>
                             <Feather
                               name={
@@ -120,23 +134,13 @@ function CashBookMoneyTable({ data, fields, inverseDate, setInverseDate }) {
                   }}
                 </Pressable>
               );
-            })
-          ) : (
-            <VStack
-              space="5"
-              alignItems={"center"}
-              justifyContent={"center"}
-              opacity={0.5}
-              paddingTop={10}
-            >
-              <MaterialCommunityIcons
-                size={"150"}
-                name="database-off-outline"
-              />
-              <Text fontSize={"lg"}>Không có dữ liệu </Text>
-            </VStack>
-          )}
-        </ScrollView>
+            })}
+          </ScrollView>
+        ) : (
+          <VStack flex={1}>
+            <NoData />
+          </VStack>
+        )}
       </VStack>
     </Center>
   );
@@ -144,7 +148,6 @@ function CashBookMoneyTable({ data, fields, inverseDate, setInverseDate }) {
 const styles = StyleSheet.create({
   table: {
     marginHorizontal: constantMain.widthOfScreen * 0.025,
-    marginTop: 20,
     elevation: 5,
     shadowColor: "#52006A",
     backgroundColor: "#fff",
@@ -154,7 +157,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tableHeader: {
-    paddingLeft: "8%",
+    paddingLeft: 10,
     backgroundColor: "#D9D9D9",
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
@@ -166,36 +169,11 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     color: "#000",
   },
-  totalPrice: {
-    fontSize: 17,
-    fontWeight: 800,
-  },
-  tableContent: {
-    marginTop: 10,
-    maxHeight:
-      Platform.OS === "ios"
-        ? constantMain.heightOfScreen * 0.52
-        : constantMain.heightOfScreen * 0.55,
-  },
   tableContentScrollView: {
     paddingLeft: 10,
   },
-
   boxItemContent: {
     paddingVertical: 10,
-  },
-  textTotalItemContent: {
-    fontSize: 16,
-    fontWeight: 700,
-  },
-  boxTotalContent: {
-    alignContent: "center",
-    backgroundColor: "#dddddc",
-    paddingLeft: 10,
-    paddingVertical: 10,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 });
 export default CashBookMoneyTable;

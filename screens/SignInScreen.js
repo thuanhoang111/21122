@@ -8,23 +8,23 @@ import {
   StyleSheet,
   StatusBar,
   Alert,
-  LogBox,
 } from "react-native";
 import * as Animatable from "react-native-animatable";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { useTheme } from "react-native-paper";
 import Feather from "react-native-vector-icons/Feather";
-import { StoreInfoUser } from "../constants/API";
 import { LinearGradient } from "expo-linear-gradient";
 import { AuthContext } from "../components/context";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Post from "./../API/service/Post";
+import { Spinner, useToast } from "native-base";
+import { primaryColor } from "./../constants/ConstantStyle";
 const SignInScreen = () => {
+  const [isLoading, setIsLoading] = useState(false);
   // Use State khởi tạo
   const [data, setData] = useState({
-    username: "htxbosuabt",
-    password: "bosua@123",
-    check_textInputChange: true,
+    username: "",
+    password: "",
+    check_textInputChange: false,
     secureTextEntry: false,
     isValidUser: true,
     isValidPassword: true,
@@ -96,33 +96,28 @@ const SignInScreen = () => {
   };
 
   async function getUserData(userID, password) {
-    // let URL = URL_API_LOGIN + userID + "&password=" + password;
-    // const response = await fetch(URL);
-    // let data = await response.json();
-    // console.log(data);
-    // return data;
-    return await axios
-      .post(`http://192.168.90.84:1375/api/User/Login`, {
-        userID: userID,
-        password: password,
+    return await Post.handlePostWithBody("User/Login", {
+      userID: userID,
+      password: password,
+    })
+      .then((data) => {
+        return data;
       })
-      .then((res) => {
-        return res.data;
-      })
-      .catch((error) => console.log(error));
-  }
-  // nhớ xóa đi
-  const Logout = async (userId) => {
-    axios
-      .post("http://192.168.90.84:1375/api/User/Logout", {
-        userID: userId,
-      })
-      .then((response) => {
-        AsyncStorage.removeItem(StoreInfoUser);
+      .finally((res) => {
+        res && Alert.alert("Thông báo", "Lỗi đường truyền", [{ text: "Ok" }]);
+        setIsLoading(false);
       });
+  }
+  // // nhớ xóa đi
+  const Logout = async (userId) => {
+    Post.handlePostWithBody("User/Logout", {
+      userID: userId,
+    }).then((response) => {
+      // AsyncStorage.removeItem(StoreInfoUser);
+    });
   };
   const loginHandle = async (userName, password) => {
-    Logout("htxbosuabt");
+    Logout(userName);
     const foundUser = await getUserData(userName, password);
     if (data.username.length == 0 || data.password.length == 0) {
       Alert.alert("Thông báo", "Vui lòng nhập đầy đủ thông tin tài khoản", [
@@ -145,10 +140,9 @@ const SignInScreen = () => {
     }
     signIn(foundUser);
   };
-
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#009387" barStyle="light-content" />
+      <StatusBar backgroundColor={primaryColor} barStyle="dark-content" />
       <View style={styles.header}>
         <Text style={styles.text_header}>HỆ THỐNG KẾ TOÁN HTX WACA</Text>
       </View>
@@ -237,15 +231,19 @@ const SignInScreen = () => {
           </Animatable.View>
         )}
         {/* <TouchableOpacity>
-          <Text style={{ color: '#009387', marginTop: 15 }}>
+          <Text style={{ color: {primaryColor}, marginTop: 15 }}>
             Quên mật khẩu?
           </Text>
         </TouchableOpacity> */}
         <View style={styles.button}>
           <TouchableOpacity
             style={styles.signIn}
+            disabled={isLoading || false}
             onPress={() => {
-              loginHandle(data.username, data.password);
+              setIsLoading(true);
+              setTimeout(() => {
+                loginHandle(data.username, data.password);
+              }, 500);
             }}
           >
             <LinearGradient
@@ -254,16 +252,20 @@ const SignInScreen = () => {
               colors={["#08d4c4", "#01ab9d"]}
               style={styles.signIn}
             >
-              <Text
-                style={[
-                  styles.textSign,
-                  {
-                    color: "#fff",
-                  },
-                ]}
-              >
-                Đăng nhập
-              </Text>
+              {isLoading ? (
+                <Spinner size="sm" />
+              ) : (
+                <Text
+                  style={[
+                    styles.textSign,
+                    {
+                      color: "#fff",
+                    },
+                  ]}
+                >
+                  Đăng nhập
+                </Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -277,11 +279,7 @@ export default SignInScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#009387",
-    // TP ->
-    // alignItems: 'center',
-    // justifyContent: 'center',
-    // TP <-
+    backgroundColor: primaryColor,
   },
   header: {
     flex: 1,

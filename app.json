@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "WACA",
-    "slug": "htxwaca",
-    "version": "1.0.0",
+    "slug": "ketoanhtx",
+    "version": "1.0.12",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,47 +11,55 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
+        }
+      ], [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ]
+    ],
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/e39b1554-3f7a-400b-afbc-decb31df3105"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "requireFullScreen": true,
+      "buildNumber":"1.0.12",
+      "supportsTablet": true,
+      "bundleIdentifier": "sorimachi.app.waca"
     },
     "android": {
+      "versionCode": 20,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "sorimachi.app.waca",
-      "googleServicesFile": "./google-services.json"
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "package": "sorimachi.waca.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "expo": {
-      "userInterfaceStyle": "automatic"
-    },
-    "dependencies": {
-      "svg": "react-native-svg"
-    },
-    "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/adaptive-icon.png",
-          "color": "#40bfa7",
-          "sounds": "./assets/notifiSound.wav"
-        }
-      ]
-    ],
     "extra": {
       "eas": {
-        "projectId": "ae27f2dd-0784-43e9-8346-4e96cce571fd"
+        "projectId": "e39b1554-3f7a-400b-afbc-decb31df3105"
       }
     },
-    "owner": "thuanhoang"
+    "owner": "sorimachivietnam",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
   }
 }

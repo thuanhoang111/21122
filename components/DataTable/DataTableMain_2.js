@@ -8,10 +8,12 @@ import {
 } from "native-base";
 import { StyleSheet, Text } from "react-native";
 import * as constantMain from "../../constants/ConstantMain";
-import { financialReportName } from "../../model/data";
 import * as ConstantFunction from "../../constants/ConstantFunc";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-function DataTableMain_2({ data, fields, listTitle }) {
+import { formatMoneyToVN } from "./../../constants/ConstantFunc";
+import NoData from "../NoData/NoData";
+import { blackColor, whiteColor } from "../../constants/ConstantStyle";
+function DataTableMain_2({ data, fields, listTitle, circulars }) {
+  const numberDivide = circulars === "TT133" ? 10 : 100;
   return (
     <View style={styles.table}>
       <View style={styles.tableHeader}>
@@ -43,49 +45,54 @@ function DataTableMain_2({ data, fields, listTitle }) {
             >
               {data.slice(0, data.length - 1).map((item, index) => {
                 return (
-                  <View key={index}>
-                    <HStack style={styles.boxItemContent}>
-                      <View style={{ marginHorizontal: 5 }}>
-                        <Text
-                          style={[
-                            { width: constantMain.widthOfScreen * 0.5 },
-                            listTitle[index].code % 100 !== 0
-                              ? listTitle[index].code % 10 && {
-                                  fontSize: 11,
-                                  paddingLeft: 10,
-                                }
-                              : {
+                  listTitle[index] && (
+                    <View key={index}>
+                      <HStack style={styles.boxItemContent}>
+                        <View style={{ marginHorizontal: 5 }}>
+                          <Text
+                            style={[
+                              { width: constantMain.widthOfScreen * 0.5 },
+                              listTitle[index].code % numberDivide === 0 &&
+                              listTitle[index].code !== "320"
+                                ? {
+                                    fontWeight: 700,
+                                  }
+                                : {
+                                    fontSize: 12,
+                                    paddingLeft: 10,
+                                  },
+                            ]}
+                          >
+                            {/* {ConstantFunction.handleGetTitleWithCode(
+                              listTitle,
+                              item.Code
+                            )} */}
+                            {item.Target}
+                          </Text>
+                        </View>
+                        <View style={{ marginHorizontal: 5 }}>
+                          <Text
+                            style={[
+                              {
+                                width: constantMain.widthOfScreen * 0.35,
+                                textAlign: "right",
+                              },
+                              listTitle[index].code % numberDivide === 0 &&
+                                listTitle[index].code !== "320" && {
                                   fontWeight: 700,
                                 },
-                          ]}
-                        >
-                          {ConstantFunction.handleGetTitleWithCode(
-                            financialReportName,
-                            item.Code
-                          )}
-                        </Text>
-                      </View>
-                      <View style={{ marginHorizontal: 5 }}>
-                        <Text
-                          style={
-                            listTitle[index].code % 100 !== 0
-                              ? {
-                                  width: constantMain.widthOfScreen * 0.35,
-                                  textAlign: "right",
-                                }
-                              : {
-                                  width: constantMain.widthOfScreen * 0.35,
-                                  textAlign: "right",
-                                  fontWeight: 700,
-                                }
-                          }
-                        >
-                          {item.EndingBalance.toLocaleString()}
-                        </Text>
-                      </View>
-                    </HStack>
-                    <Divider></Divider>
-                  </View>
+                            ]}
+                          >
+                            {ConstantFunction.formatMoneyToVN(
+                              item.EndingBalance,
+                              "đ"
+                            )}
+                          </Text>
+                        </View>
+                      </HStack>
+                      <Divider></Divider>
+                    </View>
+                  )
                 );
               })}
             </ScrollView>
@@ -97,22 +104,13 @@ function DataTableMain_2({ data, fields, listTitle }) {
               </View>
               <View style={{ marginHorizontal: 5, marginRight: 10 }}>
                 <Text style={[styles.textTotalItemContent]}>
-                  {Math.round(data.slice(-1)[0].EndingBalance).toLocaleString()}
+                  {formatMoneyToVN(data.slice(-1)[0].EndingBalance, "đ")}
                 </Text>
               </View>
             </HStack>
           </>
         ) : (
-          <VStack
-            space="5"
-            alignItems={"center"}
-            justifyContent={"center"}
-            opacity={0.5}
-            paddingTop={10}
-          >
-            <MaterialCommunityIcons size={"150"} name="database-off-outline" />
-            <Text fontSize={"lg"}>Không có dữ liệu </Text>
-          </VStack>
+          <NoData fontSizeText="lg" />
         )}
       </VStack>
     </View>
@@ -120,16 +118,11 @@ function DataTableMain_2({ data, fields, listTitle }) {
 }
 const styles = StyleSheet.create({
   table: {
-    width: constantMain.widthOfScreen * 0.95,
-    maxHeight:
-      Platform.OS === "ios"
-        ? constantMain.heightOfScreen * 0.6
-        : constantMain.heightOfScreen * 0.75,
     marginHorizontal: constantMain.widthOfScreen * 0.025,
     marginTop: 20,
     elevation: 5,
     shadowColor: "#52006A",
-    backgroundColor: "#fff",
+    backgroundColor: whiteColor,
     borderRadius: 20,
     fontSize: 8,
     overflow: "hidden",
@@ -148,7 +141,7 @@ const styles = StyleSheet.create({
   titleHeader: {
     fontSize: 16,
     fontWeight: 600,
-    color: "#000",
+    color: blackColor,
   },
   totalPrice: {
     fontSize: 17,
@@ -156,10 +149,7 @@ const styles = StyleSheet.create({
   },
   tableContent: {
     marginTop: 10,
-    maxHeight:
-      Platform.OS === "ios"
-        ? constantMain.heightOfScreen * 0.5
-        : constantMain.heightOfScreen * 0.55,
+
     minHeight: constantMain.heightOfScreen * 0.45,
   },
   tableContentScrollView: {

@@ -10,92 +10,36 @@ import {
 } from "native-base";
 import { StyleSheet } from "react-native";
 import * as constantMain from "../../constants/ConstantMain";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Feather from "react-native-vector-icons/Feather";
-import IconAntDesign from "react-native-vector-icons/AntDesign";
 import { formatMoneyToVN } from "./../../constants/ConstantFunc";
-const widthOfTable = constantMain.widthOfScreen * 0.95;
+import NoData from "../../components/NoData/NoData";
 function IOInventoryDetailTable({ data = [], fields }) {
+  const listWidth = ["21%", "24%", "26%", "28%"];
   return (
-    <Center style={styles.table}>
+    <Center style={styles.table} flex={15}>
       {/* Header Table */}
       <HStack
         style={styles.tableHeader}
         justifyContent={"flex-start"}
         w={"100%"}
+        space={1}
       >
-        {/* {fields.map((item, index) => {
+        {fields.map((item, index) => {
           return (
-              <Heading
-                size={"sm"}
-                textAlign={index == 0 || index == 3 ? "center" : "left"}
-                key={index}
-                style={
-                  (styles.titleHeader,
-                  {
-                    width: (widthOfTable * 0.95) / fields.length,
-                  })
-                }
-              >
-                {item}
-              </Heading>
+            <Heading
+              py={2}
+              size={"sm"}
+              textAlign={index == fields.length - 1 ? "left" : "center"}
+              key={index}
+              style={styles.titleHeader}
+              width={listWidth[index]}
+            >
+              {item}
+            </Heading>
           );
-        })} */}
-        <Heading
-          py={2}
-          size={"sm"}
-          textAlign={"center"}
-          style={
-            (styles.titleHeader,
-            {
-              width: "21%",
-            })
-          }
-        >
-          Ngày
-        </Heading>
-        <Heading
-          py={2}
-          size={"sm"}
-          textAlign={"center"}
-          style={
-            (styles.titleHeader,
-            {
-              width: "20%",
-            })
-          }
-        >
-          Số CT
-        </Heading>
-        <Heading
-          py={2}
-          size={"sm"}
-          textAlign={"center"}
-          style={
-            (styles.titleHeader,
-            {
-              width: "32%",
-            })
-          }
-        >
-          Nhập/Xuất
-        </Heading>
-        <Heading
-          py={2}
-          size={"sm"}
-          textAlign={"left"}
-          style={
-            (styles.titleHeader,
-            {
-              width: "29%",
-            })
-          }
-        >
-          Tồn
-        </Heading>
+        })}
       </HStack>
-      <VStack style={styles.tableContent}>
+      <VStack style={styles.tableContent} flex={15}>
         <ScrollView
           style={styles.tableContentScrollView}
           nestedScrollEnabled={true}
@@ -120,20 +64,20 @@ function IOInventoryDetailTable({ data = [], fields }) {
                               : "white"
                           }
                         >
-                          <Text fontSize={10} style={[{ width: "21%" }]}>
-                            {item.date}
+                          <Text fontSize={10} style={[{ width: listWidth[0] }]}>
+                            {item.DateTime}
                           </Text>
-                          <Text fontSize={10} style={[{ width: "20%" }]}>
-                            {item.documentCode}
+                          <Text fontSize={10} style={[{ width: listWidth[1] }]}>
+                            {item.DocumentCode}
                           </Text>
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "30%" }]}
+                            style={[{ width: listWidth[2] }]}
                           >
                             <Text fontSize={12} bold>
-                              {item.valueExport
-                                ? item.quantityExport
-                                : item.quantityImport}
+                              {item.ExportValue
+                                ? item.ExportQuantity
+                                : item.ImportQuantity}
                             </Text>
                             <HStack
                               alignItems={"center"}
@@ -141,31 +85,32 @@ function IOInventoryDetailTable({ data = [], fields }) {
                             >
                               <Text fontSize={10}>
                                 {formatMoneyToVN(
-                                  item.valueExport
-                                    ? item.valueExport
-                                    : item.valueImport
+                                  item.ExportValue
+                                    ? item.ExportValue
+                                    : item.ImportValue,
+                                  "đ"
                                 )}
                               </Text>
                               <Feather
                                 name={
-                                  item.valueExport
+                                  item.ExportValue
                                     ? "arrow-down-right"
                                     : "arrow-up-right"
                                 }
                                 size={16}
-                                color={item.valueExport ? "#fb0414" : "#1dfd1c"}
+                                color={item.ExportValue ? "#fb0414" : "#1dfd1c"}
                               ></Feather>
                             </HStack>
                           </VStack>
                           <VStack
                             alignItems={"flex-start"}
-                            style={[{ width: "29%" }]}
+                            style={[{ width: listWidth[3] }]}
                           >
                             <Text fontSize={12} bold>
-                              {item.quantityBalance}
+                              {item.StockQuantity}
                             </Text>
                             <Text fontSize={10}>
-                              {formatMoneyToVN(item.valueBalance)}
+                              {formatMoneyToVN(item.StockValue, "đ")}
                             </Text>
                           </VStack>
                         </HStack>
@@ -177,16 +122,7 @@ function IOInventoryDetailTable({ data = [], fields }) {
               );
             })
           ) : (
-            <VStack
-              space="5"
-              alignItems={"center"}
-              justifyContent={"center"}
-              opacity={0.5}
-              paddingTop={10}
-            >
-              <MaterialCommunityIcons size={150} name="database-off-outline" />
-              <Text fontSize={"lg"}>Không có dữ liệu </Text>
-            </VStack>
+            <NoData />
           )}
         </ScrollView>
       </VStack>
@@ -198,14 +134,13 @@ export default IOInventoryDetailTable;
 const styles = StyleSheet.create({
   table: {
     marginHorizontal: constantMain.widthOfScreen * 0.025,
-    marginTop: 10,
     elevation: 5,
+    marginVertical: 10,
     shadowColor: "#52006A",
     backgroundColor: "#fff",
     borderRadius: 20,
     fontSize: 8,
     overflow: "hidden",
-    marginBottom: 10,
   },
   tableHeader: {
     backgroundColor: "#D9D9D9",
@@ -219,35 +154,13 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     color: "#000",
   },
-  totalPrice: {
-    fontSize: 17,
-    fontWeight: 800,
-  },
   tableContent: {
     marginTop: 10,
-    maxHeight:
-      Platform.OS === "ios"
-        ? constantMain.heightOfScreen * 0.62
-        : constantMain.heightOfScreen * 0.64,
   },
   tableContentScrollView: {
     paddingLeft: 10,
   },
-
   boxItemContent: {
     paddingVertical: 10,
-  },
-  textTotalItemContent: {
-    fontSize: 16,
-    fontWeight: 700,
-  },
-  boxTotalContent: {
-    alignContent: "center",
-    backgroundColor: "#dddddc",
-    paddingLeft: 10,
-    paddingVertical: 10,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 });

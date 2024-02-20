@@ -9,13 +9,14 @@ import {
   Divider,
   ScrollView,
   Skeleton,
+  Modal,
 } from "native-base";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useContext, useEffect, useState } from "react";
+import * as Get from "../../API/service/Get";
 import {
-  compactMoney,
+  compactMoneyToString,
   convertPercent,
   formatMoneyToVN,
 } from "../../constants/ConstantFunc";
@@ -25,22 +26,22 @@ import Filter from "../../components/Filter/Filter";
 import { Drawer } from "react-native-drawer-layout";
 import Header from "../../components/Header/Header";
 import { Alert } from "react-native";
+import { MainContext } from "../MainContext";
+import { widthOfScreen } from "../../constants/ConstantMain";
+import { linkClickColor, linkColor } from "../../constants/ConstantStyle";
 function CashBookMoney({ route, navigation }) {
-  const dataUser = route.params.data;
-  const lastPermissionYear =
-    dataUser.permission[dataUser.permission.length - 1].year;
+  const mainContext = useContext(MainContext);
+  const dataUser = mainContext.dataUser;
+  const lastPermissionYear = mainContext.lastPermissionYear;
+  const isIos = mainContext.isIos;
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({});
   const [dataChart, setDataChart] = useState();
-  const [endAngle, setEndAngle] = useState(0);
-  const [isAnimate, setIsAnimate] = useState(true);
-  const [title, setTitle] = useState();
-  const [inforFilter, setInforFilter] = useState({
-    startMonth: 1,
-    endMonth: 12,
-    year: lastPermissionYear,
-    accountCode: 0,
+  const [configChart, setConfigChart] = useState({
+    endAngle: 0,
+    isAnimate: true,
   });
+  const inforFilter = mainContext.inforFilter;
   const lstBankAccount = [
     {
       AccountCode: 0,
@@ -55,45 +56,39 @@ function CashBookMoney({ route, navigation }) {
    * Author: ThuanHoang 19/09/2023
    * Function get data from Api CashMoney
    * @param {ArrayList} data
-   * @returns data
    */
   const handleGetData = (startMonth, endMonth, year, accountCode) => {
-    axios
-      .get(
-        `http://192.168.90.84:1375/api/DongTienMat/CashBook?m1=${startMonth}&m2=${endMonth}&AccountType=${accountCode}&userId=${dataUser.id}&year=${year}`
-      )
-      .then((res) => {
-        return res.data;
-      })
+    Get.HandleGetWithParam(
+      `DongTienMat/CashBook`,
+      `m1=${startMonth}&m2=${endMonth}&AccountType=${accountCode}&userId=${dataUser.id}&year=${year}`
+    )
       .then((data) => {
-        if (data.error) {
-          Alert.alert("Thông báo", data.errorDescription, [{ text: "Ok" }]);
+        if (data.isError || data.error || data.results[0] === undefined) {
+          Alert.alert(
+            data.errorMsg || "Thông báo",
+            data.errorDescription || "Đã xảy ra lỗi vui lòng chọn lại năm",
+            [{ text: "Ok", onPress: () => setOpen(false) }]
+          );
+          setDataChart([]);
+          setData({});
         } else {
-          setOpen(false);
           data &&
             data.results &&
             handleConfigChartPie(data.results[0], accountCode);
           data && data.results && setData(data.results[0]);
-          setTitle(`Từ ${startMonth}/${year} đến ${endMonth}/${year}`);
+          setTimeout(() => {
+            setOpen(false);
+            mainContext.onChangeInforFilter({
+              startMonth,
+              endMonth,
+              year,
+              accountCode,
+            });
+          }, 1000);
         }
       })
-      .catch(() => {
-        setOpen(false);
-        setTitle();
-        setDataChart();
-        setTimeout(() => {
-          setTitle("Không có dữ liệu");
-          setDataChart([]);
-          setData([]);
-        }, 5000);
-      })
       .finally(() => {
-        setInforFilter({
-          startMonth,
-          endMonth,
-          year,
-          accountCode,
-        });
+        mainContext.onChangeLoading(false);
       });
   };
   const handleConfigChartPie = (data, accountCode) => {
@@ -104,11 +99,10 @@ function CashBookMoney({ route, navigation }) {
         accountCode == 0 ? data.TongTienThu : data.TongTienThuNgoaiTe;
       const totalExpenses =
         accountCode == 0 ? data.TongTienChi : data.TongTienChiNgoaiTe;
-      const totalBalance =
+      let totalBalance =
         accountCode == 0 ? data.TienTonCuoiKy : data.TienTonCuoiKyNgoaiTe;
-
-      const totalAmount = totalReVenue + totalExpenses + totalBalance;
-
+      const totalAmount = totalReVenue + totalExpenses + Math.abs(totalBalance);
+      totalBalance = Math.abs(totalBalance);
       setDataChart(
         totalAmount !== 0
           ? [
@@ -116,45 +110,49 @@ function CashBookMoney({ route, navigation }) {
                 index: 1,
                 x: convertPercent(totalAmount, totalReVenue, "String"),
                 y: convertPercent(totalAmount, totalReVenue, "Number"),
-                money: compactMoney(totalReVenue),
+                money: compactMoneyToString(totalReVenue),
                 active: false,
               },
               {
                 index: 2,
                 x: convertPercent(totalAmount, totalExpenses, "String"),
                 y: convertPercent(totalAmount, totalExpenses, "Number"),
-                money: compactMoney(totalExpenses),
+                money: compactMoneyToString(totalExpenses),
                 active: false,
               },
               {
                 index: 3,
                 x: convertPercent(totalAmount, totalBalance, "String"),
                 y: convertPercent(totalAmount, totalBalance, "Number"),
-                money: compactMoney(totalBalance),
+                money: compactMoneyToString(totalBalance),
                 active: false,
               },
             ]
           : []
       );
-
-      setTimeout(() => {
-        setEndAngle(360);
-        setIsAnimate(false);
-      }, 100);
+      setConfigChart({
+        endAngle: 360,
+        isAnimate: true,
+      });
     }
   };
   useEffect(() => {
     handleGetData(
-      inforFilter.startMonth,
-      inforFilter.endMonth,
-      inforFilter.year,
-      inforFilter.accountCode
+      inforFilter.startMonth || 1,
+      inforFilter.endMonth || 12,
+      inforFilter.year || lastPermissionYear,
+      0
     );
+    return () => {
+      mainContext.onChangeInforFilter((item) => ({
+        accountCode: undefined,
+      }));
+    };
   }, []);
   return (
     <Drawer
-      swipeEdgeWidth={40}
-      swipeMinDistance={100}
+      swipeEdgeWidth={widthOfScreen * 0.5}
+      swipeMinDistance={50}
       swipeMinVelocity={1000}
       drawerPosition="right"
       drawerType="front"
@@ -162,14 +160,16 @@ function CashBookMoney({ route, navigation }) {
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       hideStatusBarOnOpen
+      swipeEnabled={isIos}
       renderDrawerContent={() => {
         return (
-          <Filter
-            inforPermission={dataUser.permission}
-            onSearch={handleGetData}
-            inforFilter={inforFilter}
-            lstBankAccount={lstBankAccount}
-          />
+          inforFilter.accountCode !== undefined && (
+            <Filter
+              inforPermission={dataUser.permission}
+              onSearch={handleGetData}
+              lstBankAccount={lstBankAccount}
+            />
+          )
         );
       }}
       drawerStyle={{ backgroundColor: "#f1f1f1", width: "85%" }}
@@ -182,35 +182,39 @@ function CashBookMoney({ route, navigation }) {
       ></Header>
       <SafeAreaView>
         <Center py={3}>
-          {title ? (
+          {data ? (
             <Text fontSize="xl" bold>
-              {title}
+              {inforFilter.year &&
+                inforFilter.startMonth &&
+                inforFilter.endMonth &&
+                `Từ ${inforFilter.startMonth}/${inforFilter.year} đến ${inforFilter.endMonth}/${inforFilter.year}`}
             </Text>
           ) : (
             <Skeleton.Text width={"70%"} lines={1} py={2}></Skeleton.Text>
           )}
         </Center>
-        <PieChart
-          dataChart={dataChart}
-          endAngle={endAngle}
-          isAnimate={isAnimate}
-          setDataChart={setDataChart}
-          listTitle={["Thu", "Chi", "Tồn"]}
-        />
+        <Center>
+          <PieChart
+            dataChart={dataChart}
+            endAngle={configChart.endAngle}
+            isAnimate={configChart.isAnimateisAnimate}
+            setDataChart={setDataChart}
+            listTitle={["Thu", "Chi", "Tồn"]}
+          />
+        </Center>
         <VStack marginX={5} marginY={2}>
           <HStack alignItems={"center"} justifyContent={"space-between"}>
             <HStack alignItems={"center"} justifyContent={"center"}>
               <Heading fontSize={"xl"} paddingY={2}>
-                Diễn giải:
+                Diễn giải:{" "}
               </Heading>
               <Text>(Đơn vị tính:VND)</Text>
             </HStack>
 
             <Pressable
               onPress={() =>
-                navigation.navigate("Chi Tiết Sổ Quỹ", {
-                  data: dataUser,
-                  inforFilter: inforFilter,
+                navigation.navigate("Chi tiết sổ quỹ", {
+                  onGetData: handleGetData,
                 })
               }
             >
@@ -225,10 +229,10 @@ function CashBookMoney({ route, navigation }) {
                       fontSize={"md"}
                       color={
                         isPressed
-                          ? "#1892a7"
+                          ? linkClickColor
                           : isHovered
-                          ? "#1892a7"
-                          : "#1ecbe1"
+                          ? linkClickColor
+                          : linkColor
                       }
                     >
                       Xem thêm
@@ -238,10 +242,10 @@ function CashBookMoney({ route, navigation }) {
                       size={15}
                       color={
                         isPressed
-                          ? "#1892a7"
+                          ? linkClickColor
                           : isHovered
-                          ? "#1892a7"
-                          : "#1ecbe1"
+                          ? linkClickColor
+                          : linkColor
                       }
                     />
                   </View>
@@ -297,7 +301,8 @@ function CashBookMoney({ route, navigation }) {
                           {formatMoneyToVN(
                             inforFilter.accountCode == 0
                               ? data.TongTienThu
-                              : data.TongTienThuNgoaiTe
+                              : data.TongTienThuNgoaiTe,
+                            "đ"
                           )}
                         </Text>
                         <MaterialIcons name="keyboard-arrow-right" />
@@ -336,7 +341,9 @@ function CashBookMoney({ route, navigation }) {
                         <Text fontSize={"md"}>Tiền thuế thu</Text>
                       </HStack>
                       <HStack alignItems={"center"}>
-                        <Text>{formatMoneyToVN(data.TongTienThueThu)}</Text>
+                        <Text>
+                          {formatMoneyToVN(data.TongTienThueThu, "đ")}
+                        </Text>
                         <MaterialIcons name="keyboard-arrow-right" />
                       </HStack>
                     </HStack>
@@ -382,7 +389,8 @@ function CashBookMoney({ route, navigation }) {
                           {formatMoneyToVN(
                             inforFilter.accountCode == 0
                               ? data.TongTienChi
-                              : data.TongTienChiNgoaiTe
+                              : data.TongTienChiNgoaiTe,
+                            "đ"
                           )}
                         </Text>
                         <MaterialIcons name="keyboard-arrow-right" />
@@ -415,13 +423,15 @@ function CashBookMoney({ route, navigation }) {
                       }
                     >
                       <HStack alignItems={"center"}>
-                        <View p={2.5}>
+                        <View p={2}>
                           <FontAwesome5 name="money-bill-wave"></FontAwesome5>
                         </View>
                         <Text fontSize={"md"}>Tiền thuế chi</Text>
                       </HStack>
                       <HStack alignItems={"center"}>
-                        <Text>{formatMoneyToVN(data.TongTienThueChi)}</Text>
+                        <Text>
+                          {formatMoneyToVN(data.TongTienThueChi, "đ")}
+                        </Text>
                         <MaterialIcons name="keyboard-arrow-right" />
                       </HStack>
                     </HStack>
@@ -457,7 +467,8 @@ function CashBookMoney({ route, navigation }) {
                         {formatMoneyToVN(
                           inforFilter.accountCode == 0
                             ? data.TienDuDauKy
-                            : data.TienDuDauKyNgoaiTe
+                            : data.TienDuDauKyNgoaiTe,
+                          "đ"
                         )}
                       </Text>
                     </HStack>
@@ -493,7 +504,8 @@ function CashBookMoney({ route, navigation }) {
                         {formatMoneyToVN(
                           inforFilter.accountCode == 0
                             ? data.TienTonCuoiKy
-                            : data.TienTonCuoiKyNgoaiTe
+                            : data.TienTonCuoiKyNgoaiTe,
+                          "đ"
                         )}
                       </Text>
                     </HStack>

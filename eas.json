@@ -1,0 +1,41 @@
+{
+  "cli": {
+    "version": ">= 3.17.1"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios":{
+        "resourceClass":"m1-medium"
+      }
+    },
+    "preview": {
+      "channel":"preview",
+        "android":{
+          "buildType": "apk"
+      },
+
+      "ios":{
+        
+      }
+    },
+    "production": {
+      "channel": "production",
+      "distribution": "store"
+  }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "thamthuy100272@gmail.com",
+        "ascAppId":"6444119442",
+        "appleTeamId": "X684RH2U4U",
+        "ascApiKeyIssuerId":"917fa2dc-a56d-43aa-9ef1-6abf9a924cee",
+        "ascApiKeyId":"J9C98QGN5T",
+        "ascApiKeyPath":"./AuthKey_J9C98QGN5T.p8",
+        "sku":"97330161-9688-4304-97ab-06c9cf53bedf"
+      }
+    }
+  }
+}

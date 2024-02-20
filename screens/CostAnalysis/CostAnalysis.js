@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import { View, StyleSheet, SafeAreaView, Alert } from "react-native";
 import ChartYear from "../../components/ChartYear/ChartYear";
-import axios from "axios";
+import * as Post from "../../API/service/Post";
+import * as Get from "../../API/service/Get";
 import CostAnalysisTable from "./CostAnalysisTable";
-import { Center, Divider, HStack, Skeleton } from "native-base";
+import { Center, Divider, HStack, Skeleton, VStack } from "native-base";
 import { useToggle } from "@uidotdev/usehooks";
-import * as method from "../../API/util/httpRequest";
-import { data } from "../../model/data";
 import SkeletonTable from "./../../components/Skeleton/SkeletonTable";
+import { MainContext } from "../MainContext";
+import Header from "../../components/Header/Header";
 const CostAnalysis = ({ route, navigation }) => {
+  const mainContext = useContext(MainContext);
   const [dataCost, setDataCost] = useState();
   const [totalPriceOfEachYear, setTotalPriceOfEachYear] = useState();
   const [isRenderLoading, setIsRenderLoading] = useToggle(false);
+  const inforFilter = mainContext.inforFilter;
+  const dataUser = mainContext.dataUser;
+  const lastPermissionYear = mainContext.lastPermissionYear;
 
-  const dataUser = route.params.data;
-  const inforFilter = route.params.inforFilter;
-  const lastPermissionYear =
-    dataUser.permission[dataUser.permission.length - 1].year;
   /**
    * Author: ThuanHoang 24/06/2023
    * The function sums the values of CostAnalysis by year and the format is suitable for displaying the diagram
@@ -40,18 +41,14 @@ const CostAnalysis = ({ route, navigation }) => {
    * Function Synthesize information from cost analysis
    */
   const handlePriceSummary = async () => {
-    axios
-      .post(`http://192.168.90.84:1375/api/CostAnalysis`, {
-        radyear: 1,
-        reporttype: 1,
-        userId: dataUser.id,
-        year: lastPermissionYear,
-      })
+    await Post.handlePostWithBody(`CostAnalysis`, {
+      radyear: 1,
+      reporttype: 1,
+      userId: dataUser.id,
+      year: lastPermissionYear,
+    })
       .then((res) => {
-        return res.data;
-      })
-      .then((data) => {
-        console.log(data);
+        return res;
       })
       .catch((error) => console.log(error));
   };
@@ -61,103 +58,114 @@ const CostAnalysis = ({ route, navigation }) => {
    * @param {ArrayList} data
    * @returns data
    */
-  const handleGetData = () => {
-    axios
-      .get(
-        `http://192.168.90.84:1375/api/CostAnalysis/YearReport?radYear=2&reportType=1&userId=${dataUser.id}&year=${lastPermissionYear}`
-      )
-      .then((res) => {
-        return res.data;
-      })
+  const handleGetData = async (year) => {
+    await Get.HandleGetWithParam(
+      `CostAnalysis/YearReport`,
+      `radYear=2&reportType=1&userId=${dataUser.id}&year=${year}`
+    )
       .then((data) => {
-        setDataCost(data);
-        handleCalcPriceOfEachYear(data);
+        if (data.error || data.isError) {
+          Alert.alert("Thông báo", data.errorDescription || "Đã xảy ra lỗi", [
+            { text: "Ok" },
+          ]);
+          setDataCost([]);
+          setTotalPriceOfEachYear([{ year: year, value: 0 }]);
+        } else {
+          setDataCost(data[0].CostAnalysisDetails);
+          handleCalcPriceOfEachYear(data);
+        }
       })
-      .catch((error) => console.log(error));
+      .finally(() => {
+        mainContext.onChangeInforFilter({
+          year,
+        });
+        mainContext.onChangeLoading(false);
+      });
   };
   // useEffect(() => {
   //   handlePriceSummary();
   // }, []);
   useEffect(() => {
-    handleGetData();
+    handleGetData(inforFilter.year || lastPermissionYear);
     setTimeout(() => {
       setIsRenderLoading(true);
     }, 1);
   }, []);
   return (
-    <View style={styles.container}>
-      {dataCost ? (
-        <>
-          {totalPriceOfEachYear && (
-            <ChartYear data={totalPriceOfEachYear}></ChartYear>
-          )}
-          <View style={{ marginTop: 30 }}>
+    <>
+      <Header
+        title={"Phân tích chi phí"}
+        onBack={() => navigation.goBack()}
+        // onClick={() => navigation.navigate("Chi tiết phân tích chi phí")}
+      ></Header>
+      <VStack justifyContent={"center"} flex={1}>
+        {dataCost ? (
+          <VStack
+            alignItems={"center"}
+            space={10}
+            justifyContent={"space-between"}
+            flex={1}
+            paddingBottom={2}
+          >
+            {totalPriceOfEachYear && (
+              <ChartYear data={totalPriceOfEachYear}></ChartYear>
+            )}
             <CostAnalysisTable
-              tableName={`Năm ${lastPermissionYear}`}
-              data={dataCost[0].CostAnalysisDetails.slice(2, 10).filter(
-                (item) =>
-                  item.AccountCode !== "0007" && item.AccountCode !== "0004"
-              )}
+              year={inforFilter.year || lastPermissionYear}
+              data={dataCost
+                .slice(2, 10)
+                .filter(
+                  (item) =>
+                    item.AccountCode !== "0007" && item.AccountCode !== "0004"
+                )}
+              showDetail={(data) =>
+                navigation.navigate("Chi tiết phân tích chi phí", {
+                  data: data,
+                  title: "Chi tiết phân tích chi phí",
+                  reportType: 1,
+                })
+              }
+              onChangeYear={handleGetData}
             ></CostAnalysisTable>
-          </View>
-        </>
-      ) : (
-        <Center
-          w="100%"
-          style={{
-            borderRadius: 25,
-            zIndex: 100,
-          }}
-        >
-          {isRenderLoading && (
-            <>
-              <HStack
-                w="40%"
-                space={4}
-                marginBottom={100}
-                justifyContent={"center"}
-                alignItems={"flex-end"}
-              >
-                <Skeleton flex="1" h="200" rounded="md" />
-                <Skeleton flex="1" h="130" rounded="md" />
-                <Divider
-                  style={{
-                    width: 200,
-                    height: 3,
-                    position: "absolute",
-                    bottom: 0,
-                    zIndex: 1000,
-                    backgroundColor: "#b8c0c2",
-                  }}
-                ></Divider>
-              </HStack>
-              <SkeletonTable></SkeletonTable>
-            </>
-          )}
-        </Center>
-      )}
-    </View>
+          </VStack>
+        ) : (
+          <Center
+            w="100%"
+            style={{
+              borderRadius: 25,
+              zIndex: 100,
+            }}
+          >
+            {isRenderLoading && (
+              <>
+                <HStack
+                  w="40%"
+                  space={4}
+                  marginBottom={100}
+                  justifyContent={"center"}
+                  alignItems={"flex-end"}
+                  minHeight={250}
+                >
+                  <Skeleton flex="1" h="200" rounded="md" />
+                  <Skeleton flex="1" h="130" rounded="md" />
+                  <Divider
+                    style={{
+                      width: 200,
+                      height: 3,
+                      position: "absolute",
+                      bottom: 0,
+                      zIndex: 1000,
+                      backgroundColor: "#b8c0c2",
+                    }}
+                  ></Divider>
+                </HStack>
+                <SkeletonTable></SkeletonTable>
+              </>
+            )}
+          </Center>
+        )}
+      </VStack>
+    </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5FCFF",
-  },
-  tooltipContainer: {
-    position: "absolute",
-    top: 20,
-    left: 20,
-    backgroundColor: "white",
-    borderRadius: 4,
-    padding: 8,
-  },
-  tooltipText: {
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-});
 export default CostAnalysis;

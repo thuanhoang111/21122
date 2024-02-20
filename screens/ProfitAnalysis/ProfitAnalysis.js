@@ -5,28 +5,28 @@ import {
   VictoryLine,
   VictoryScatter,
   VictoryTheme,
-  VictoryTooltip,
 } from "victory-native";
 import { heightOfScreen, widthOfScreen } from "../../constants/ConstantMain";
 import BudgetSituationTable from "../BudgetSituation/BudgetSituationTable";
-import { VStack, HStack } from "native-base";
-import { useToggle } from "@uidotdev/usehooks";
+import { VStack, Center } from "native-base";
+import { currentTimeColor, primaryColor } from "../../constants/ConstantStyle";
 
 function ProfitAnalysis() {
+  const [isRender, setIsRender] = useState(false);
   const dataSampleMonth = [
     { month: " ", value: 0 },
-    { month: "T1", value: 210 },
-    { month: "T2", value: 340 },
-    { month: "T3", value: 430 },
-    { month: "T4", value: 70 },
-    { month: "T5", value: 230 },
-    { month: "T6", value: 605 },
-    { month: "T7", value: 270 },
-    { month: "T8", value: 160 },
-    { month: "T9", value: 420 },
-    { month: "T10", value: 700 },
-    { month: "T11", value: 470 },
-    { month: "T12", value: 980 },
+    { month: "T1", value: Math.round(Math.random() * 100) },
+    { month: "T2", value: Math.round(Math.random() * 100) },
+    { month: "T3", value: Math.round(Math.random() * 100) },
+    { month: "T4", value: Math.round(Math.random() * 100) },
+    { month: "T5", value: Math.round(Math.random() * 100) },
+    { month: "T6", value: Math.round(Math.random() * 100) },
+    { month: "T7", value: Math.round(Math.random() * 100) },
+    { month: "T8", value: Math.round(Math.random() * 100) },
+    { month: "T9", value: Math.round(Math.random() * 100) },
+    { month: "T10", value: Math.round(Math.random() * 100) },
+    { month: "T11", value: Math.round(Math.random() * 100) },
+    { month: "T12", value: Math.round(Math.random() * 100) },
   ];
   const initialDataDotMonth = Array.from(
     { length: dataSampleMonth.length - 1 },
@@ -36,24 +36,23 @@ function ProfitAnalysis() {
     })
   );
   const [dataDotSample, setDataDotSample] = useState(initialDataDotMonth);
-  const [isRender, setIsRender] = useToggle(false);
   const quarterYearDataDetail = [
     {
       item: [
         {
-          title: "Chi phí hoạt động tín dụng nội bộ",
+          AccountName: "0003",
           Money: 40000000,
         },
         {
-          title: "Chi phí quản lý kinh doanh",
+          AccountName: "0005",
           Money: 7953000,
         },
         {
-          title: "Chi phí khác",
+          AccountName: "0006",
           Money: 2250000,
         },
         {
-          title: "Chi phí lương",
+          AccountName: "0008",
           Money: 1550000,
         },
       ],
@@ -61,19 +60,19 @@ function ProfitAnalysis() {
     {
       item: [
         {
-          title: "Chi phí hoạt động tín dụng nội bộ",
+          AccountName: "0003",
           Money: 40000000,
         },
         {
-          title: "Chi phí quản lý kinh doanh",
+          AccountName: "0005",
           Money: 7953000,
         },
         {
-          title: "Chi phí khác",
+          AccountName: "0006",
           Money: 2250000,
         },
         {
-          title: "Chi phí lương",
+          AccountName: "0008",
           Money: 1550000,
         },
       ],
@@ -81,19 +80,19 @@ function ProfitAnalysis() {
     {
       item: [
         {
-          title: "Chi phí hoạt động tín dụng nội bộ",
+          AccountName: "0003",
           Money: 40000000,
         },
         {
-          title: "Chi phí quản lý kinh doanh",
+          AccountName: "0005",
           Money: 7953000,
         },
         {
-          title: "Chi phí khác",
+          AccountName: "0006",
           Money: 2250000,
         },
         {
-          title: "Chi phí lương",
+          AccountName: "0008",
           Money: 1550000,
         },
       ],
@@ -101,19 +100,19 @@ function ProfitAnalysis() {
     {
       item: [
         {
-          title: "Chi phí hoạt động tín dụng nội bộ",
+          AccountName: "0003",
           Money: 40000000,
         },
         {
-          title: "Chi phí quản lý kinh doanh",
+          AccountName: "0005",
           Money: 7953000,
         },
         {
-          title: "Chi phí khác",
+          AccountName: "0006",
           Money: 2250000,
         },
         {
-          title: "Chi phí lương",
+          AccountName: "0008",
           Money: 1550000,
         },
       ],
@@ -123,102 +122,104 @@ function ProfitAnalysis() {
     setDataDotSample(dataSampleMonth.slice(1));
     setTimeout(() => {
       setIsRender(true);
-    }, 500);
+    }, 100);
   }, []);
   return (
-    <VStack>
-      {isRender && (
-        <>
-          <HStack
-            justifyContent={"flex-end"}
-            backgroundColor={"#fff"}
-            margin={3}
-            borderRadius={10}
-            style={{ elevation: 10, shadowColor: "#52006A" }}
+    isRender && (
+      <VStack
+        alignItems={"flex-start"}
+        justifyContent={"center"}
+        flex={1}
+        paddingBottom={2}
+        style={{
+          elevation: 5,
+        }}
+      >
+        <Center
+          backgroundColor={"#fff"}
+          margin={3}
+          borderRadius={10}
+          flex={1}
+          style={{ elevation: 10, shadowColor: "#52006A" }}
+        >
+          <VictoryChart
+            theme={VictoryTheme.material}
+            height={heightOfScreen * 0.35}
+            width={widthOfScreen}
           >
-            <View
+            <VictoryLine
               style={{
-                width: widthOfScreen * 0.95,
-                height: heightOfScreen * 0.4,
+                data: {
+                  stroke: primaryColor,
+                },
               }}
-            >
-              <VictoryChart
-                theme={VictoryTheme.material}
-                height={[heightOfScreen * 0.4]}
-                width={widthOfScreen}
-              >
-                <VictoryLine
-                  style={{
-                    data: {
-                      stroke: "#009087",
-                    },
-                  }}
-                  data={dataSampleMonth}
-                  x="month"
-                  y="value"
-                  animate={{
-                    duration: 1500,
-                  }}
-                />
-                <VictoryScatter
-                  animate={
-                    Platform.OS === "ios" && {
-                      duration: 100,
-                      easing: "expOut",
-                      onExit: {
-                        duration: 500,
-                        before: () => ({ opacity: 0.3, _y: 0 }),
-                      },
-                      onEnter: {
-                        duration: 500,
-                        before: () => ({ opacity: 0.3, _y: 0 }),
-                        after: (datum) => ({ opacity: 1, _y: datum._y }),
-                      },
-                    }
-                  }
-                  // labels={({ datum }) => datum.value}
-                  // labelComponent={<VictoryTooltip />}
-                  style={{
-                    data: {
-                      fill: ({ datum }) =>
-                        datum.month === "T12" ? "#F25F33" : "#009087",
-                      opacity: ({ datum }) => datum.opacity || 1,
-                    },
-                  }}
-                  size={7}
-                  data={dataDotSample}
-                  x="month"
-                  y="value"
-                />
-              </VictoryChart>
-            </View>
-          </HStack>
-          <Text
-            style={{
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              fontWeight: 600,
-            }}
-          >
-            Chi phí chi tiết
-          </Text>
-          <ScrollView
-            height={heightOfScreen * 0.38}
-            style={{ paddingBottom: 2 }}
-          >
-            {quarterYearDataDetail.map((item, index) => {
-              return (
-                <BudgetSituationTable
-                  key={index}
-                  tableName={`Quý ${index + 1}/2023`}
-                  data={item.item}
-                ></BudgetSituationTable>
-              );
-            })}
-          </ScrollView>
-        </>
-      )}
-    </VStack>
+              data={[{ month: " ", value: 0 }].concat(dataDotSample)}
+              x="month"
+              y="value"
+              animate={{
+                duration: 500,
+              }}
+            />
+            <VictoryScatter
+              labels={({ datum }) => `${datum.value}`}
+              animate={
+                Platform.OS === "ios" && {
+                  duration: 100,
+                  easing: "expOut",
+                  onExit: {
+                    duration: 500,
+                    before: () => ({ opacity: 0.3, _y: 0 }),
+                  },
+                  onEnter: {
+                    duration: 500,
+                    before: () => ({ opacity: 0.3, _y: 0 }),
+                    after: (datum) => ({ opacity: 1, _y: datum._y }),
+                  },
+                }
+              }
+              // labels={({ datum }) => datum.value}
+              // labelComponent={<VictoryTooltip />}
+              style={{
+                data: {
+                  fill: ({ datum }) =>
+                    datum.month === "T12" ? currentTimeColor : primaryColor,
+                  opacity: ({ datum }) => datum.opacity || 1,
+                },
+                labels: {
+                  zIndex: 1,
+                  fill: ({ datum }) =>
+                    datum.month === "T12" ? "red" : "#525252",
+                },
+              }}
+              size={7}
+              data={dataDotSample}
+              x="month"
+              y="value"
+            />
+          </VictoryChart>
+        </Center>
+        <Text
+          style={{
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            fontWeight: 600,
+          }}
+        >
+          Chi phí chi tiết
+        </Text>
+        <ScrollView style={{ paddingBottom: 2, flex: 1 }}>
+          {quarterYearDataDetail.map((item, index) => {
+            return (
+              <BudgetSituationTable
+                key={index}
+                tableName={`Quý ${index + 1}/2023`}
+                data={item.item}
+              ></BudgetSituationTable>
+            );
+          })}
+        </ScrollView>
+      </VStack>
+    )
   );
 }
 

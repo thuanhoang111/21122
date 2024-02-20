@@ -28,44 +28,35 @@ function BudgetSituationTable({ tableName, data }) {
           {tableName}
         </Heading>
       </View>
-      <VStack style={styles.tableContent}>
-        <ScrollView
-          style={styles.tableContentScrollView}
-          nestedScrollEnabled={true}
-        >
-          {data.map((item, index) => {
-            return (
-              <View key={index}>
-                <HStack style={styles.boxItemContent}>
-                  <View style={{ marginHorizontal: 2 }}>
-                    <Text
-                      style={{
-                        width: widthOfScreen * 0.5,
-                      }}
-                    >
-                      {ConstantFunction.handleGetTitleWithCode(
-                        CostAnalysisName,
-                        item.AccountCode
-                      )}
-                      {/* {item.title} */}
-                    </Text>
-                  </View>
-                  <View style={{ marginHorizontal: 5 }}>
-                    <Text
-                      style={{
-                        width: widthOfScreen * 0.35,
-                        textAlign: "right",
-                      }}
-                    >
-                      {item.Money.toLocaleString()}
-                    </Text>
-                  </View>
-                </HStack>
-                <Divider></Divider>
-              </View>
-            );
-          })}
-        </ScrollView>
+      <VStack flex={1} padding={2}>
+        {data.map((item, index) => {
+          return (
+            <View key={index} flex={1}>
+              <HStack style={styles.boxItemContent}>
+                <View style={{ marginHorizontal: 2 }}>
+                  <Text
+                    style={{
+                      width: widthOfScreen * 0.5,
+                    }}
+                  >
+                    {item.AccountName}
+                  </Text>
+                </View>
+                <View style={{ marginHorizontal: 5 }}>
+                  <Text
+                    style={{
+                      width: widthOfScreen * 0.35,
+                      textAlign: "right",
+                    }}
+                  >
+                    {item.Money.toLocaleString()}
+                  </Text>
+                </View>
+              </HStack>
+              <Divider></Divider>
+            </View>
+          );
+        })}
       </VStack>
     </View>
   );
@@ -97,33 +88,12 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     color: "#000",
   },
-  totalPrice: {
-    fontSize: 17,
-    fontWeight: 800,
-  },
-  tableContent: {
-    maxHeight:
-      Platform.OS === "ios" ? heightOfScreen * 0.5 : heightOfScreen * 0.55,
-  },
+
   tableContentScrollView: {
     paddingLeft: 10,
   },
-
   boxItemContent: {
     paddingVertical: 10,
-  },
-  textTotalItemContent: {
-    fontSize: 16,
-    fontWeight: 700,
-  },
-  boxTotalContent: {
-    alignContent: "center",
-    backgroundColor: "#dddddc",
-    paddingLeft: 10,
-    paddingVertical: 10,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 });
 export default BudgetSituationTable;
